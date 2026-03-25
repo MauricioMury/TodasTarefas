@@ -1,8 +1,8 @@
 """
 notificacoes.py
 ================
-Módulo responsável pelo envio de notificações por e-mail via Gmail SMTP.
-Mantido separado do app.py para facilitar troca de provedor no futuro.
+Módulo responsável pelo envio de notificações por e-mail (Gmail SMTP)
+e WhatsApp (CallMeBot).
 
 Configuração necessária (variáveis de ambiente ou direto no código):
     NOTIF_EMAIL_REMETENTE  — seu Gmail, ex: seuemail@gmail.com
@@ -12,29 +12,28 @@ Configuração necessária (variáveis de ambiente ou direto no código):
 
 import smtplib
 import logging
+import os
+import urllib.parse
+import urllib.request
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-import os
 
 logger = logging.getLogger(__name__)
 
-# ── Configuração do remetente ─────────────────────────────────────
-# Prefira variáveis de ambiente em produção.
-# Em desenvolvimento, pode preencher diretamente.
-SMTP_HOST      = 'smtp.gmail.com'
-SMTP_PORT      = 587
+# ── Configuração do remetente de e-mail ──────────────────────────
+SMTP_HOST       = 'smtp.gmail.com'
+SMTP_PORT       = 587
 EMAIL_REMETENTE = os.environ.get('NOTIF_EMAIL_REMETENTE', 'seuemail@gmail.com')
 EMAIL_SENHA_APP = os.environ.get('NOTIF_EMAIL_SENHA_APP', 'sua_senha_de_app_aqui')
 
 
+# ══════════════════════════════════════════════════════════════════
+# E-MAIL
+# ══════════════════════════════════════════════════════════════════
+
 def enviar_email(destinatario: str, assunto: str, corpo_texto: str) -> bool:
     """
     Envia um e-mail via Gmail SMTP.
-
-    Parâmetros:
-        destinatario — endereço de e-mail do usuário
-        assunto      — linha de assunto do e-mail
-        corpo_texto  — corpo em texto puro (também gerado em HTML simples)
 
     Retorna:
         True  — envio confirmado
@@ -56,14 +55,10 @@ def enviar_email(destinatario: str, assunto: str, corpo_texto: str) -> bool:
         msg['From']    = f'Controle de Tarefas <{EMAIL_REMETENTE}>'
         msg['To']      = destinatario
 
-        # Parte texto puro
         parte_texto = MIMEText(corpo_texto, 'plain', 'utf-8')
+        corpo_html  = _texto_para_html(corpo_texto)
+        parte_html  = MIMEText(corpo_html, 'html', 'utf-8')
 
-        # Parte HTML — mesmo conteúdo, formatado
-        corpo_html = _texto_para_html(corpo_texto)
-        parte_html = MIMEText(corpo_html, 'html', 'utf-8')
-
-        # Anexar ambas (cliente usa a última que suportar)
         msg.attach(parte_texto)
         msg.attach(parte_html)
 
@@ -79,23 +74,79 @@ def enviar_email(destinatario: str, assunto: str, corpo_texto: str) -> bool:
     except smtplib.SMTPAuthenticationError:
         logger.error('enviar_email: falha de autenticação — verifique o Gmail e a senha de app.')
         return False
-
     except smtplib.SMTPException as e:
         logger.warning(f'enviar_email: erro SMTP para {destinatario}: {e}')
         return False
-
     except TimeoutError:
         logger.warning(f'enviar_email: timeout ao enviar para {destinatario}')
         return False
-
     except Exception as e:
         logger.error(f'enviar_email: erro inesperado: {e}')
         return False
 
 
+# ══════════════════════════════════════════════════════════════════
+# WHATSAPP (CallMeBot)
+# ══════════════════════════════════════════════════════════════════
+
+CALLMEBOT_URL = 'https://api.callmebot.com/whatsapp.php'
+
+
+def enviar_whatsapp(numero: str, apikey: str, mensagem: str) -> bool:
+    """
+    Envia mensagem via WhatsApp usando a API do CallMeBot.
+
+    Parâmetros:
+        numero   — número no formato internacional, ex: +5521999999999
+        apikey   — chave gerada pelo CallMeBot
+        mensagem — texto da mensagem
+
+    Retorna:
+        True  — envio confirmado (HTTP 200)
+        False — falha
+
+    Nunca lança exceção — erros são logados e retornam False.
+    """
+    if not numero or not apikey:
+        logger.warning('enviar_whatsapp: número ou apikey não configurados.')
+        return False
+
+    try:
+        params = urllib.parse.urlencode({
+            'phone':  numero,
+            'text':   mensagem,
+            'apikey': apikey,
+        })
+        url = f'{CALLMEBOT_URL}?{params}'
+
+        req = urllib.request.Request(url)
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            status = resp.status
+            body   = resp.read().decode('utf-8', errors='ignore')
+
+        if status == 200:
+            logger.info(f'WhatsApp enviado para {numero}')
+            return True
+        else:
+            logger.warning(f'enviar_whatsapp: status inesperado {status} — {body[:200]}')
+            return False
+
+    except TimeoutError:
+        logger.warning(f'enviar_whatsapp: timeout ao enviar para {numero}')
+        return False
+    except Exception as e:
+        logger.error(f'enviar_whatsapp: erro inesperado: {e}')
+        return False
+
+
+# ══════════════════════════════════════════════════════════════════
+# MONTAGEM DO CONTEÚDO
+# ══════════════════════════════════════════════════════════════════
+
 def montar_notificacao(tarefa) -> tuple[str, str]:
     """
-    Monta assunto e corpo do e-mail de notificação.
+    Monta assunto e corpo do texto de notificação.
+    Usado tanto para e-mail quanto para WhatsApp.
 
     Retorna:
         (assunto, corpo_texto)
@@ -127,6 +178,10 @@ def montar_notificacao(tarefa) -> tuple[str, str]:
 
     return assunto, '\n'.join(linhas)
 
+
+# ══════════════════════════════════════════════════════════════════
+# UTILITÁRIOS INTERNOS
+# ══════════════════════════════════════════════════════════════════
 
 def _texto_para_html(texto: str) -> str:
     """Converte texto puro em HTML simples para melhor renderização."""

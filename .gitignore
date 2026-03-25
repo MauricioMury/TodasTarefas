@@ -2,6 +2,9 @@
 *.db
 instance/
 
+# Arquivos em geral
+docs/
+
 # Ambiente virtual
 venvV4/
 venv/

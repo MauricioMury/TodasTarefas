@@ -20,15 +20,15 @@
                 </div>
                 <hr>
 
-                <!-- ── Formulário e-mail ── -->
-                <h6 class="mb-3">
-                    <i class="bi bi-envelope text-primary"></i> Notificações por E-mail
-                </h6>
                 <form method="POST" action="{{ url_for('perfil') }}">
-                    <div class="mb-3">
-                        <label for="email_notif" class="form-label">
-                            E-mail para notificações
-                        </label>
+
+                    <!-- ── Notificações por E-mail ── -->
+                    <h6 class="mb-3">
+                        <i class="bi bi-envelope text-primary"></i> Notificações por E-mail
+                    </h6>
+
+                    <div class="mb-4">
+                        <label for="email_notif" class="form-label">Endereço de E-mail</label>
                         <div class="input-group">
                             <span class="input-group-text">
                                 <i class="bi bi-envelope"></i>
@@ -42,22 +42,91 @@
                                    maxlength="120">
                         </div>
                         <small class="form-text text-muted">
-                            Você receberá lembretes de tarefas neste endereço
+                            Deixe em branco para desativar notificações por e-mail
                         </small>
                     </div>
 
-                    {% if current_user.email_notif %}
-                    <div class="alert alert-success py-2">
-                        <i class="bi bi-check-circle"></i>
-                        Notificações ativas para
-                        <strong>{{ current_user.email_notif }}</strong>
+                    <hr>
+
+                    <!-- ── Notificações por WhatsApp ── -->
+                    <h6 class="mb-3">
+                        <i class="bi bi-whatsapp text-success"></i> Notificações por WhatsApp
+                    </h6>
+
+                    <div class="mb-3">
+                        <label for="whatsapp_numero" class="form-label">
+                            Número do WhatsApp
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-telephone"></i>
+                            </span>
+                            <input type="text"
+                                   class="form-control"
+                                   id="whatsapp_numero"
+                                   name="whatsapp_numero"
+                                   placeholder="+5521999999999"
+                                   value="{{ current_user.whatsapp_numero or '' }}"
+                                   maxlength="30">
+                        </div>
+                        <small class="form-text text-muted">
+                            Formato internacional, com DDI e DDD. Ex: +5521999999999
+                        </small>
                     </div>
-                    {% else %}
-                    <div class="alert alert-warning py-2">
-                        <i class="bi bi-exclamation-triangle"></i>
-                        E-mail não configurado — notificações desativadas
+
+                    <div class="mb-3">
+                        <label for="whatsapp_apikey" class="form-label">
+                            API Key do CallMeBot
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-key"></i>
+                            </span>
+                            <input type="text"
+                                   class="form-control"
+                                   id="whatsapp_apikey"
+                                   name="whatsapp_apikey"
+                                   placeholder="123456"
+                                   value="{{ current_user.whatsapp_apikey or '' }}"
+                                   maxlength="100">
+                            <button class="btn btn-outline-secondary"
+                                    type="button"
+                                    id="btnToggleKey"
+                                    title="Mostrar/ocultar chave">
+                                <i class="bi bi-eye" id="iconToggleKey"></i>
+                            </button>
+                        </div>
+                        <small class="form-text text-muted">
+                            Chave gerada pelo CallMeBot após ativação
+                        </small>
                     </div>
-                    {% endif %}
+
+                    <!-- Status dos canais -->
+                    <div class="mb-3">
+                        {% if current_user.email_notif %}
+                        <div class="alert alert-success py-2 mb-2">
+                            <i class="bi bi-check-circle"></i>
+                            E-mail configurado — <strong>{{ current_user.email_notif }}</strong>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-warning py-2 mb-2">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            E-mail não configurado — notificações por e-mail desativadas
+                        </div>
+                        {% endif %}
+
+                        {% if current_user.whatsapp_numero and current_user.whatsapp_apikey %}
+                        <div class="alert alert-success py-2 mb-0">
+                            <i class="bi bi-check-circle"></i>
+                            WhatsApp configurado — <strong>{{ current_user.whatsapp_numero }}</strong>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-warning py-2 mb-0">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            WhatsApp não configurado — notificações por WhatsApp desativadas
+                        </div>
+                        {% endif %}
+                    </div>
 
                     <div class="d-flex justify-content-end">
                         <button type="submit" class="btn btn-primary">
@@ -68,23 +137,73 @@
             </div>
         </div>
 
-        <!-- ── Informações ── -->
+        <!-- ── Instruções CallMeBot ── -->
         <div class="card shadow">
             <div class="card-header">
                 <h6 class="mb-0">
-                    <i class="bi bi-info-circle"></i> Como funcionam as notificações
+                    <i class="bi bi-info-circle"></i> Como obter a API Key do CallMeBot
                 </h6>
             </div>
             <div class="card-body">
-                <ul class="mb-0 small text-muted">
-                    <li class="mb-2">Cadastre ou edite uma tarefa e defina uma <strong>data e hora de notificação</strong></li>
-                    <li class="mb-2">No horário definido, você receberá um e-mail com os detalhes da tarefa</li>
-                    <li class="mb-2">Cada tarefa suporta até <strong>2 notificações</strong> independentes</li>
-                    <li>Alterar a data de notificação em uma tarefa já enviada <strong>reativa</strong> o envio</li>
-                </ul>
+                <p class="text-muted small mb-3">
+                    O CallMeBot é um serviço gratuito que permite enviar mensagens
+                    ao seu WhatsApp via API. Siga os passos abaixo:
+                </p>
+                <ol class="mb-3">
+                    <li class="mb-2">
+                        Adicione o número <strong>+34 644 44 66 05</strong>
+                        na sua agenda com o nome <em>CallMeBot</em>
+                    </li>
+                    <li class="mb-2">
+                        Envie a mensagem exata pelo WhatsApp:
+                        <div class="mt-1">
+                            <code class="bg-light border rounded px-2 py-1 d-inline-block">
+                                I allow callmebot to send me messages
+                            </code>
+                        </div>
+                    </li>
+                    <li class="mb-2">
+                        Aguarde a resposta — você receberá sua
+                        <strong>API Key</strong> em segundos
+                    </li>
+                    <li>
+                        Cole a API Key e seu número no formulário acima e clique em
+                        <strong>Salvar</strong>
+                    </li>
+                </ol>
+                <div class="alert alert-info py-2 mb-0 small">
+                    <i class="bi bi-lightbulb"></i>
+                    <strong>Dica:</strong> pode levar até 2 minutos para o bot responder
+                    na primeira ativação. Se não receber, tente novamente.
+                </div>
             </div>
         </div>
 
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Toggle mostrar/ocultar API key
+document.getElementById('btnToggleKey').addEventListener('click', function () {
+    const input = document.getElementById('whatsapp_apikey');
+    const icon  = document.getElementById('iconToggleKey');
+    if (input.type === 'text') {
+        input.type = 'password';
+        icon.className = 'bi bi-eye';
+    } else {
+        input.type = 'text';
+        icon.className = 'bi bi-eye-slash';
+    }
+});
+
+// Iniciar campo como password se já tiver valor
+(function () {
+    const input = document.getElementById('whatsapp_apikey');
+    if (input.value) {
+        input.type = 'password';
+    }
+})();
+</script>
 {% endblock %}

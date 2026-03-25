@@ -13,8 +13,13 @@ class User(UserMixin, db.Model):
     # Notificações por e-mail
     email_notif = db.Column(db.String(120), nullable=True)
 
+    # Notificações por WhatsApp (CallMeBot)
+    whatsapp_numero = db.Column(db.String(30),  nullable=True)
+    whatsapp_apikey = db.Column(db.String(100), nullable=True)
+
     tarefas    = db.relationship('Tarefa',    backref='usuario', lazy=True, cascade='all, delete-orphan')
     categorias = db.relationship('Categoria', backref='usuario', lazy=True, cascade='all, delete-orphan')
+
 
 class Categoria(db.Model):
     """Modelo de categorias customizadas por usuário"""
@@ -44,12 +49,15 @@ class Tarefa(db.Model):
     user_id        = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     created_at     = db.Column(db.DateTime,    default=datetime.utcnow)
 
-    # 🆕 Notificação WhatsApp — até 2 por tarefa
-    # Cada par: datetime escolhido pelo usuário + flag de envio
-    notif_datetime_1 = db.Column(db.DateTime, nullable=True)
-    notif_enviada_1  = db.Column(db.Boolean,  default=False, nullable=False)
-    notif_datetime_2 = db.Column(db.DateTime, nullable=True)
-    notif_enviada_2  = db.Column(db.Boolean,  default=False, nullable=False)
+    # Notificações — até 2 por tarefa
+    # Cada notificação tem: datetime escolhido + flag individual por canal
+    notif_datetime_1        = db.Column(db.DateTime, nullable=True)
+    notif_email_enviada_1   = db.Column(db.Boolean,  default=False, nullable=False)
+    notif_whatsapp_enviada_1= db.Column(db.Boolean,  default=False, nullable=False)
+
+    notif_datetime_2        = db.Column(db.DateTime, nullable=True)
+    notif_email_enviada_2   = db.Column(db.Boolean,  default=False, nullable=False)
+    notif_whatsapp_enviada_2= db.Column(db.Boolean,  default=False, nullable=False)
 
     def get_prioridade_cor(self):
         cores = {
