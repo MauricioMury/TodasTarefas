@@ -1,0 +1,332 @@
+{% extends "base.html" %}
+
+{% block title %}Lista de Tarefas - Controle de Tarefas{% endblock %}
+
+{% block content %}
+<div class="card shadow">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0"><i class="bi bi-list-task"></i> Minhas Tarefas</h4>
+    </div>
+    <div class="card-body">
+        <!-- Filtros -->
+        <form method="GET" action="{{ url_for('lista_tarefas') }}" class="mb-3">
+            <!-- Indicador de Filtros Ativos -->
+            {% set filtros_ativos = [] %}
+            {% if busca_filtro %}{% set _ = filtros_ativos.append('Busca: ' + busca_filtro) %}{% endif %}
+            {% if categoria_filtro %}{% set _ = filtros_ativos.append('Categoria: ' + categoria_filtro) %}{% endif %}
+            {% if prioridade_filtro %}{% set _ = filtros_ativos.append('Prioridade: ' + prioridade_filtro) %}{% endif %}
+            {% if status_filtro %}{% set _ = filtros_ativos.append('Status: ' + status_filtro) %}{% endif %}
+            {% if data_filtro %}{% set _ = filtros_ativos.append('Data: ' + data_filtro) %}{% endif %}
+
+            {% if filtros_ativos %}
+            <div class="alert alert-info alert-dismissible fade show d-flex align-items-center justify-content-between"
+                role="alert">
+                <div>
+                    <i class="bi bi-funnel-fill"></i>
+                    <strong>Filtros Ativos ({{ filtros_ativos|length }}):</strong>
+                    {% for filtro in filtros_ativos %}
+                    <span class="badge bg-primary ms-1">{{ filtro }}</span>
+                    {% endfor %}
+                </div>
+                <a href="{{ url_for('lista_tarefas', limpar=1, per_page=per_page) }}"
+                   class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-x-circle"></i> Limpar Todos
+                </a>
+            </div>
+            {% endif %}
+
+            <div class="row g-2">
+                <div class="col-md-4 mb-2">
+                    <label for="busca" class="form-label small">Buscar em Tarefa / Comentário</label>
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control form-control-sm" id="busca" name="busca"
+                            placeholder="Digite para buscar..." value="{{ busca_filtro }}"
+                            autocomplete="off">
+                        {% if busca_filtro %}
+                        <button type="button" class="btn btn-outline-secondary btn-sm" id="btnLimparBusca" title="Limpar busca">
+                            <i class="bi bi-x"></i>
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <div class="row g-2">
+                        <div class="col-md-3">
+                            <label for="categoria" class="form-label small">Categoria</label>
+                            <select class="form-select form-select-sm" id="categoria" name="categoria">
+                                <option value="">Todas</option>
+                                {% for cat in categorias %}
+                                <option value="{{ cat.nome }}" {% if categoria_filtro==cat.nome %}selected{% endif %}>
+                                    {{ cat.nome }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="prioridade" class="form-label small">Prioridade</label>
+                            <select class="form-select form-select-sm" id="prioridade" name="prioridade">
+                                <option value="">Todas</option>
+                                <option value="Muito Importante" {% if prioridade_filtro=='Muito Importante' %}selected{% endif %}>
+                                    Muito Importante</option>
+                                <option value="Importante" {% if prioridade_filtro=='Importante' %}selected{% endif %}>
+                                    Importante</option>
+                                <option value="Normal" {% if prioridade_filtro=='Normal' %}selected{% endif %}>Normal</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="status" class="form-label small">Status</label>
+                            <select class="form-select form-select-sm" id="status" name="status">
+                                <option value="">Todos</option>
+                                <option value="Pendente" {% if status_filtro=='Pendente' %}selected{% endif %}>Pendente</option>
+                                <option value="Concluída" {% if status_filtro=='Concluída' %}selected{% endif %}>Concluída</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="data" class="form-label small">Data</label>
+                            <input type="date" class="form-select form-select-sm" id="data" name="data"
+                                value="{{ data_filtro }}">
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end gap-2">
+                            <button type="submit" class="btn btn-sm btn-primary">
+                                <i class="bi bi-funnel"></i> Filtrar
+                            </button>
+                            <a href="{{ url_for('lista_tarefas', limpar=1, per_page=per_page) }}"
+                               class="btn btn-sm btn-secondary">
+                                <i class="bi bi-x-circle"></i> Limpar
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <input type="hidden" name="per_page" value="{{ per_page }}">
+        </form>
+
+        <!-- Configuração de itens por página -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <form method="GET" action="{{ url_for('lista_tarefas') }}" class="d-flex align-items-center gap-2">
+                <label for="per_page" class="form-label mb-0 small">Itens por página:</label>
+                <select class="form-select form-select-sm" style="width: auto;" id="per_page" name="per_page"
+                    onchange="this.form.submit()">
+                    <option value="5" {% if per_page==5 %}selected{% endif %}>5</option>
+                    <option value="10" {% if per_page==10 %}selected{% endif %}>10</option>
+                    <option value="20" {% if per_page==20 %}selected{% endif %}>20</option>
+                    <option value="50" {% if per_page==50 %}selected{% endif %}>50</option>
+                    <option value="100" {% if per_page==100 %}selected{% endif %}>100</option>
+                </select>
+                <input type="hidden" name="categoria" value="{{ categoria_filtro }}">
+                <input type="hidden" name="prioridade" value="{{ prioridade_filtro }}">
+                <input type="hidden" name="status" value="{{ status_filtro }}">
+                <input type="hidden" name="data" value="{{ data_filtro }}">
+                <input type="hidden" name="busca" value="{{ busca_filtro }}">
+            </form>
+            <span class="badge bg-secondary">Total: {{ total }} tarefas</span>
+        </div>
+
+        <!-- Tabela de tarefas -->
+        <div class="table-responsive">
+            <table class="table table-sm table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Tarefa</th>
+                        <th>Data</th>
+                        <th>Hora</th>
+                        <th>Prioridade</th>
+                        <th>Categoria</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if tarefas %}
+                    {% for tarefa in tarefas %}
+                    <tr>
+                        <td>
+                            {{ tarefa.tarefa }}
+
+                            {% if tarefa.comentario %}
+                            <i class="bi bi-chat-left-text text-muted ms-1"
+                               title="{{ tarefa.comentario }}"
+                               data-bs-toggle="tooltip"></i>
+                            {% endif %}
+
+                            {# 🆕 Indicadores de notificação WhatsApp #}
+                            {% if tarefa.notif_datetime_1 or tarefa.notif_datetime_2 %}
+                                {% if tarefa.notif_enviada_1 and (not tarefa.notif_datetime_2 or tarefa.notif_enviada_2) %}
+                                    {# Todas enviadas #}
+                                    <i class="bi bi-whatsapp text-success ms-1"
+                                       title="Todas as notificações enviadas"
+                                       data-bs-toggle="tooltip"></i>
+                                {% elif not tarefa.notif_enviada_1 and tarefa.notif_datetime_1 and not tarefa.notif_enviada_2 and tarefa.notif_datetime_2 %}
+                                    {# Duas notificações agendadas, nenhuma enviada #}
+                                    <i class="bi bi-whatsapp text-warning ms-1"
+                                       title="2 notificações agendadas: {{ tarefa.notif_datetime_1.strftime('%d/%m %H:%M') }} e {{ tarefa.notif_datetime_2.strftime('%d/%m %H:%M') }}"
+                                       data-bs-toggle="tooltip"></i>
+                                {% elif tarefa.notif_datetime_1 and not tarefa.notif_enviada_1 and not tarefa.notif_datetime_2 %}
+                                    {# Só notif 1 agendada, não enviada #}
+                                    <i class="bi bi-whatsapp text-warning ms-1"
+                                       title="Notificação agendada: {{ tarefa.notif_datetime_1.strftime('%d/%m %H:%M') }}"
+                                       data-bs-toggle="tooltip"></i>
+                                {% elif tarefa.notif_datetime_2 and not tarefa.notif_enviada_2 and not tarefa.notif_datetime_1 %}
+                                    {# Só notif 2 agendada, não enviada #}
+                                    <i class="bi bi-whatsapp text-warning ms-1"
+                                       title="Notificação agendada: {{ tarefa.notif_datetime_2.strftime('%d/%m %H:%M') }}"
+                                       data-bs-toggle="tooltip"></i>
+                                {% else %}
+                                    {# Parcialmente enviada (1 de 2) #}
+                                    <i class="bi bi-whatsapp text-info ms-1"
+                                       title="1 notificação enviada, 1 pendente"
+                                       data-bs-toggle="tooltip"></i>
+                                {% endif %}
+                            {% endif %}
+                            {# fim indicadores #}
+
+                        </td>
+                        <td>{{ tarefa.data_meta.strftime('%d/%m/%Y') }}</td>
+                        <td>
+                            {{ tarefa.hora_inicio.strftime('%H:%M') }}
+                            -
+                            {{ tarefa.hora_fim.strftime('%H:%M') if tarefa.hora_fim else '' }}
+                        </td>
+                        <td><span class="badge bg-{{ tarefa.get_prioridade_cor() }}">{{ tarefa.prioridade }}</span></td>
+                        <td>
+                            {% set cat_cor = 'info' %}
+                            {% for cat in categorias %}
+                                {% if cat.nome == tarefa.categoria %}
+                                    {% set cat_cor = cat.cor %}
+                                {% endif %}
+                            {% endfor %}
+                            <span class="badge bg-{{ cat_cor }}">{{ tarefa.categoria }}</span>
+                        </td>
+                        <td>
+                            {% if tarefa.status == 'Concluída' %}
+                            <span class="badge bg-success">Concluída</span>
+                            {% else %}
+                            <span class="badge bg-warning text-dark">Pendente</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                {% if tarefa.status == 'Pendente' %}
+                                <form method="POST" action="{{ url_for('marcar_concluida', id=tarefa.id) }}"
+                                    style="display: inline;">
+                                    <button type="submit" class="btn btn-success btn-sm" title="Marcar como concluída">
+                                        <i class="bi bi-check-circle"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
+                                <a href="{{ url_for('duplicar_tarefa', id=tarefa.id) }}" class="btn btn-info btn-sm"
+                                    title="Duplicar tarefa">
+                                    <i class="bi bi-files"></i>
+                                </a>
+                                <a href="{{ url_for('editar_tarefa', id=tarefa.id) }}" class="btn btn-primary btn-sm"
+                                    title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form method="POST" action="{{ url_for('deletar_tarefa', id=tarefa.id) }}"
+                                    style="display: inline;"
+                                    onsubmit="return confirm('Tem certeza que deseja deletar esta tarefa?');">
+                                    <button type="submit" class="btn btn-danger btn-sm" title="Deletar">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+                            <p>Nenhuma tarefa encontrada</p>
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Legenda dos ícones WhatsApp -->
+        {% if current_user.whatsapp_numero %}
+        <div class="d-flex gap-3 mt-2 mb-1">
+            <small class="text-muted">
+                <i class="bi bi-whatsapp text-warning"></i> Notificação agendada
+            </small>
+            <small class="text-muted">
+                <i class="bi bi-whatsapp text-info"></i> Parcialmente enviada
+            </small>
+            <small class="text-muted">
+                <i class="bi bi-whatsapp text-success"></i> Todas enviadas
+            </small>
+        </div>
+        {% endif %}
+
+        <!-- Paginação -->
+        {% if total_pages > 1 %}
+        <nav>
+            <ul class="pagination pagination-sm justify-content-center">
+                <li class="page-item {% if page == 1 %}disabled{% endif %}">
+                    <a class="page-link"
+                        href="{{ url_for('lista_tarefas', page=page-1, per_page=per_page, categoria=categoria_filtro, prioridade=prioridade_filtro, status=status_filtro, data=data_filtro, busca=busca_filtro) }}">Anterior</a>
+                </li>
+
+                {% for p in range(1, total_pages + 1) %}
+                {% if p == page %}
+                <li class="page-item active"><span class="page-link">{{ p }}</span></li>
+                {% elif p == 1 or p == total_pages or (p >= page - 2 and p <= page + 2) %}
+                <li class="page-item">
+                    <a class="page-link"
+                        href="{{ url_for('lista_tarefas', page=p, per_page=per_page, categoria=categoria_filtro, prioridade=prioridade_filtro, status=status_filtro, data=data_filtro, busca=busca_filtro) }}">{{ p }}</a>
+                </li>
+                {% elif p == page - 3 or p == page + 3 %}
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+                {% endif %}
+                {% endfor %}
+
+                <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+                    <a class="page-link"
+                        href="{{ url_for('lista_tarefas', page=page+1, per_page=per_page, categoria=categoria_filtro, prioridade=prioridade_filtro, status=status_filtro, data=data_filtro, busca=busca_filtro) }}">Próximo</a>
+                </li>
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+// Ativar tooltips do Bootstrap
+var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl)
+})
+
+// Debounce: submete o form 400ms após parar de digitar
+(function() {
+    var inputBusca = document.getElementById('busca');
+    var form = inputBusca ? inputBusca.closest('form') : null;
+    var timer = null;
+
+    if (inputBusca && form) {
+        inputBusca.addEventListener('input', function() {
+            clearTimeout(timer);
+            timer = setTimeout(function() {
+                var pageInputs = form.querySelectorAll('input[name="page"]');
+                pageInputs.forEach(function(el) { el.value = 1; });
+                form.submit();
+            }, 400);
+        });
+    }
+
+    // Botão X para limpar campo de busca
+    var btnLimpar = document.getElementById('btnLimparBusca');
+    if (btnLimpar && inputBusca && form) {
+        btnLimpar.addEventListener('click', function() {
+            inputBusca.value = '';
+            form.submit();
+        });
+    }
+})();
+</script>
+{% endblock %}
+{% endblock %}

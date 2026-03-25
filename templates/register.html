@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Criar Conta — Controle de Tarefas{% endblock %}
+{% block content %}
+<div class="row justify-content-center mt-4">
+    <div class="col-md-5 col-lg-4">
+        <div class="text-center mb-4">
+            <div style="width:48px;height:48px;background:var(--accent);border-radius:14px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px;">
+                <i class="bi bi-person-plus" style="font-size:1.4rem;color:#fff;"></i>
+            </div>
+            <h3 style="font-family:'Inter',sans-serif;font-weight:800;">Criar Conta</h3>
+            <p style="color:var(--text-muted);font-size:.875rem;">Preencha os dados abaixo</p>
+        </div>
+        <div class="card">
+            <div class="card-body p-4">
+                <form method="POST" action="{{ url_for('register') }}">
+                    <div class="mb-3">
+                        <label class="form-label">Usuário</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-person"></i></span>
+                            <input type="text" class="form-control" name="username" required autofocus autocomplete="off">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Senha</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                            <input type="password" class="form-control" name="password" required autocomplete="off">
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label">Confirmar Senha</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+                            <input type="password" class="form-control" name="confirm_password" required>
+                        </div>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-1"></i> Cadastrar
+                        </button>
+                    </div>
+                </form>
+                <hr style="border-color:var(--border-color);margin:20px 0;">
+                <div class="text-center" style="font-size:.85rem;color:var(--text-muted);">
+                    Já tem uma conta? <a href="{{ url_for('login') }}" style="color:var(--accent);">Entrar</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Controle de Tarefas{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='GestaoTarefasIlustrada.ico') }}">
+
+    <style>
+        :root,
+        [data-theme="dark"] {
+            --bg-primary:    #0f1117;
+            --bg-secondary:  #1a1d27;
+            --bg-card:       #1e2130;
+            --bg-input:      #252840;
+            --border-color:  #2e3250;
+            --text-primary:  #e8eaf6;
+            --text-secondary:#8b90b8;
+            --text-muted:    #555a7a;
+            --accent:        #7c6af7;
+            --accent-hover:  #9580ff;
+            --accent-glow:   rgba(124,106,247,0.2);
+            --success:       #22c55e;
+            --warning:       #f59e0b;
+            --danger:        #ef4444;
+            --info:          #38bdf8;
+            --shadow:        0 4px 24px rgba(0,0,0,0.4);
+            --shadow-card:   0 2px 12px rgba(0,0,0,0.3);
+        }
+
+        [data-theme="light"] {
+            --bg-primary:    #f0f2fa;
+            --bg-secondary:  #ffffff;
+            --bg-card:       #ffffff;
+            --bg-input:      #f5f6ff;
+            --border-color:  #dde1f5;
+            --text-primary:  #1a1d2e;
+            --text-secondary:#5a5f85;
+            --text-muted:    #9499bb;
+            --accent:        #6355e8;
+            --accent-hover:  #7c6af7;
+            --accent-glow:   rgba(99,85,232,0.12);
+            --success:       #16a34a;
+            --warning:       #d97706;
+            --danger:        #dc2626;
+            --info:          #0284c7;
+            --shadow:        0 4px 24px rgba(0,0,0,0.08);
+            --shadow-card:   0 2px 12px rgba(0,0,0,0.06);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        h1,h2,h3,h4,h5,h6,.navbar-brand { font-family: 'Inter', sans-serif; font-weight: 700; }
+
+        .content { flex: 1; }
+
+        /* NAVBAR */
+        .navbar {
+            background: var(--bg-secondary) !important;
+            border-bottom: 1px solid var(--border-color);
+            padding: 0.55rem 1rem;
+        }
+
+        .navbar-brand {
+            font-weight: 800;
+            font-size: 2.8rem;
+            color: var(--text-primary) !important;
+            letter-spacing: -0.5px;
+        }
+
+        .navbar-brand i { color: var(--accent); margin-right: 6px; }
+
+        .nav-link {
+            color: var(--text-secondary) !important;
+            font-size: 1.5rem;
+            font-weight: 500;
+            padding: 0.45rem 0.75rem !important;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .nav-link:hover {
+            color: var(--text-primary) !important;
+            background: var(--accent-glow);
+        }
+
+        .nav-link i { margin-right: 4px; }
+
+        .navbar-toggler {
+            border-color: var(--border-color);
+        }
+
+        .navbar-toggler-icon { filter: invert(0.5); }
+
+        .dropdown-menu {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 6px;
+            box-shadow: var(--shadow);
+        }
+
+        .dropdown-item {
+            color: var(--text-secondary);
+            border-radius: 8px;
+            font-size: 0.875rem;
+            padding: 0.45rem 0.75rem;
+            transition: all 0.15s;
+        }
+
+        .dropdown-item:hover {
+            background: var(--accent-glow);
+            color: var(--text-primary);
+        }
+
+        /* TOGGLE */
+        #themeToggle {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            border-radius: 8px;
+            padding: 5px 9px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            line-height: 1;
+            margin-right: 8px;
+        }
+
+        #themeToggle:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--accent-glow);
+        }
+
+        /* CARDS */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            box-shadow: var(--shadow-card);
+        }
+
+        .card-header {
+            background: transparent !important;
+            border-bottom: 1px solid var(--border-color);
+            padding: 0.9rem 1.2rem;
+            border-radius: 14px 14px 0 0 !important;
+        }
+
+        .card-header.bg-primary {
+            background: linear-gradient(135deg, var(--accent) 0%, #5048d4 100%) !important;
+            border-bottom: none;
+        }
+
+        .card-header.bg-primary h4,
+        .card-header.bg-primary h5,
+        .card-header.bg-primary .mb-0 {
+            color: #fff !important;
+        }
+
+        .card-header .btn-light {
+            background: rgba(255,255,255,0.15);
+            border-color: rgba(255,255,255,0.25);
+            color: #fff;
+        }
+
+        .card-header .btn-light:hover {
+            background: rgba(255,255,255,0.25);
+        }
+
+        /* FORMULÁRIOS */
+        .form-control, .form-select {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            border-radius: 9px;
+            font-size: 0.875rem;
+            transition: border-color 0.2s, box-shadow 0.2s, background 0.25s !important;
+        }
+
+        .form-control:focus, .form-select:focus {
+            background: var(--bg-input);
+            border-color: var(--accent);
+            color: var(--text-primary);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .form-control::placeholder { color: var(--text-muted); }
+
+        .form-label {
+            color: var(--text-secondary);
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+
+        .input-group-text {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+        }
+
+        .form-text { color: var(--text-muted) !important; font-size: 0.75rem; }
+
+        textarea.form-control { resize: vertical; }
+
+        /* BOTÕES */
+        .btn { border-radius: 9px; font-weight: 500; font-size: 0.875rem; transition: all 0.2s; }
+
+        .btn-primary {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+        }
+        .btn-primary:hover, .btn-primary:focus {
+            background: var(--accent-hover);
+            border-color: var(--accent-hover);
+            box-shadow: 0 4px 14px var(--accent-glow);
+        }
+
+        .btn-secondary {
+            background: var(--bg-input);
+            border-color: var(--border-color);
+            color: var(--text-secondary);
+        }
+        .btn-secondary:hover {
+            background: var(--border-color);
+            color: var(--text-primary);
+            border-color: var(--border-color);
+        }
+
+        .btn-success { background: var(--success); border-color: var(--success); color: #fff; }
+        .btn-danger  { background: var(--danger);  border-color: var(--danger);  color: #fff; }
+        .btn-info    { background: var(--info);    border-color: var(--info);    color: #fff; }
+
+        .btn-outline-secondary {
+            border-color: var(--border-color);
+            color: var(--text-secondary);
+            background: transparent;
+        }
+        .btn-outline-secondary:hover {
+            background: var(--bg-input);
+            color: var(--text-primary);
+            border-color: var(--text-muted);
+        }
+
+        .btn-outline-primary {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: transparent;
+        }
+        .btn-outline-primary:hover {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        /* TABELAS */
+        .table { color: var(--text-primary); border-color: var(--border-color); }
+
+        .table-dark th, thead.table-dark th {
+            background: var(--bg-secondary) !important;
+            color: var(--text-muted) !important;
+            border-color: var(--border-color) !important;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.7px;
+        }
+
+        .table > :not(caption) > * > * {
+            background-color: transparent;
+            border-bottom-color: var(--border-color);
+            color: var(--text-primary);
+            padding: 0.7rem 1rem;
+        }
+
+        .table-hover > tbody > tr:hover > * {
+            background-color: var(--accent-glow) !important;
+        }
+
+        /* BADGES */
+        .badge {
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.68rem;
+            padding: 3px 8px;
+            letter-spacing: 0.3px;
+        }
+
+        .badge.bg-secondary {
+            background: var(--bg-input) !important;
+            color: var(--text-secondary) !important;
+            border: 1px solid var(--border-color);
+        }
+
+        /* ALERTAS */
+        .alert {
+            border-radius: 12px;
+            font-size: 0.875rem;
+        }
+
+        .alert-info {
+            background: rgba(56,189,248,0.08);
+            border-color: rgba(56,189,248,0.25);
+            color: var(--text-primary);
+        }
+
+        .alert-success {
+            background: rgba(34,197,94,0.08);
+            border-color: rgba(34,197,94,0.25);
+            color: var(--text-primary);
+        }
+
+        .alert-danger {
+            background: rgba(239,68,68,0.08);
+            border-color: rgba(239,68,68,0.25);
+            color: var(--text-primary);
+        }
+
+        .alert-warning {
+            background: rgba(245,158,11,0.08);
+            border-color: rgba(245,158,11,0.25);
+            color: var(--text-primary);
+        }
+
+        .btn-close { filter: invert(0.6); }
+
+        /* PAGINAÇÃO */
+        .pagination .page-link {
+            background: var(--bg-input);
+            border-color: var(--border-color);
+            color: var(--text-secondary);
+            border-radius: 8px !important;
+            margin: 0 2px;
+            font-size: 0.8rem;
+        }
+
+        .pagination .page-item.active .page-link {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+        }
+
+        .pagination .page-link:hover {
+            background: var(--accent-glow);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .pagination .page-item.disabled .page-link {
+            background: var(--bg-secondary);
+            color: var(--text-muted);
+        }
+
+        /* FOOTER */
+        footer {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            padding: 14px 0;
+            margin-top: auto;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.2rem;  /* ← adicionar isso */
+        }
+
+        .navbar .nav-link {
+            font-size: 1.2rem;  /* ← adicionar isso novo */
+        }
+
+        /* SCROLLBAR */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-primary); }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+        /* UTILITÁRIOS */
+        .text-muted { color: var(--text-muted) !important; }
+        .border { border-color: var(--border-color) !important; }
+
+        .jumbotron {
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-secondary) 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 18px;
+        }
+
+        /* Transição suave global */
+        * { transition: background-color 0.25s ease, border-color 0.25s ease; }
+        input, textarea, select {
+            transition: border-color 0.2s, box-shadow 0.2s, background-color 0.25s !important;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    {% if current_user.is_authenticated %}
+    <nav class="navbar navbar-expand-lg">
+        <div class="container-fluid">
+            <!-- Toggle Dark/Light — canto superior esquerdo -->
+            <button id="themeToggle" title="Alternar tema claro/escuro">
+                <i class="bi bi-sun-fill" id="themeIcon"></i>
+            </button>
+
+            <a class="navbar-brand ms-2" href="{{ url_for('index') }}">
+                <i class="bi bi-check2-square"></i> Controle de Tarefas
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('index') }}">
+                            <i class="bi bi-house"></i> Início
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('cadastro_tarefa') }}">
+                            <i class="bi bi-plus-circle"></i> Nova Tarefa
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('lista_tarefas') }}">
+                            <i class="bi bi-list-task"></i> Minhas Tarefas
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('lista_categorias') }}">
+                            <i class="bi bi-tags"></i> Categorias
+                        </a>
+                    </li>
+                    <!-- Adicionar APÓS o link de Categorias no base.html -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('calendario') }}">
+                            <i class="bi bi-calendar3"></i> Calendário
+                        </a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                            data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle"></i> {{ current_user.username }}
+                        </a>
+                        <!--<ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{{ url_for('logout') }}">
+                                    <i class="bi bi-box-arrow-right"></i> Sair
+                                </a></li>
+                        </ul>-->
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('perfil') }}">
+                                    <i class="bi bi-person-gear"></i> Meu Perfil
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('logout') }}">
+                                    <i class="bi bi-box-arrow-right"></i> Sair
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+
+    <div class="content">
+        <div class="container mt-4">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <footer class="text-center">
+        <div class="container">
+            <p class="mb-0">&copy; 2026 Controle de Tarefas V4 — Mauricio</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+    (function() {
+        var html = document.documentElement;
+        var btn  = document.getElementById('themeToggle');
+        var icon = document.getElementById('themeIcon');
+        var saved = localStorage.getItem('ct-theme') || 'dark';
+        applyTheme(saved);
+
+        if (btn) {
+            btn.addEventListener('click', function() {
+                var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+                applyTheme(next);
+                localStorage.setItem('ct-theme', next);
+            });
+        }
+
+        function applyTheme(theme) {
+            html.setAttribute('data-theme', theme);
+            if (icon) {
+                icon.className = theme === 'dark' ? 'bi bi-sun-fill' : 'bi bi-moon-fill';
+            }
+        }
+    })();
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

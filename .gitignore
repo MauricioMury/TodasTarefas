@@ -1,0 +1,15 @@
+# Banco de dados
+*.db
+instance/
+
+# Ambiente virtual
+venvV4/
+venv/
+__pycache__/
+*.pyc
+
+# Variáveis de ambiente
+.env
+
+# PythonAnywhere
+*.log

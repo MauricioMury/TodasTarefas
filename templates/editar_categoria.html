@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Categoria - Controle de Tarefas{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="bi bi-pencil"></i> Editar Categoria
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('editar_categoria', id=categoria.id) }}">
+                    <div class="mb-3">
+                        <label for="nome" class="form-label">Nome da Categoria *</label>
+                        <input type="text" class="form-control" id="nome" name="nome" 
+                               value="{{ categoria.nome }}" required maxlength="50">
+                        <small class="form-text text-muted">Máximo 50 caracteres</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="cor" class="form-label">Cor do Badge *</label>
+                        <select class="form-select" id="cor" name="cor" required>
+                            <option value="">Selecione uma cor...</option>
+                            <option value="primary" {% if categoria.cor == 'primary' %}selected{% endif %} 
+                                    style="color: #0d6efd;">🔵 Azul (Primary)</option>
+                            <option value="success" {% if categoria.cor == 'success' %}selected{% endif %} 
+                                    style="color: #198754;">🟢 Verde (Success)</option>
+                            <option value="danger" {% if categoria.cor == 'danger' %}selected{% endif %} 
+                                    style="color: #dc3545;">🔴 Vermelho (Danger)</option>
+                            <option value="warning" {% if categoria.cor == 'warning' %}selected{% endif %} 
+                                    style="color: #ffc107;">🟡 Amarelo (Warning)</option>
+                            <option value="info" {% if categoria.cor == 'info' %}selected{% endif %} 
+                                    style="color: #0dcaf0;">🔷 Ciano (Info)</option>
+                            <option value="secondary" {% if categoria.cor == 'secondary' %}selected{% endif %} 
+                                    style="color: #6c757d;">⚫ Cinza (Secondary)</option>
+                            <option value="dark" {% if categoria.cor == 'dark' %}selected{% endif %} 
+                                    style="color: #212529;">⬛ Preto (Dark)</option>
+                            <option value="light" {% if categoria.cor == 'light' %}selected{% endif %} 
+                                    style="color: #f8f9fa; background-color: #333;">⬜ Branco (Light)</option>
+                        </select>
+                        <small class="form-text text-muted">Esta cor será usada no badge da categoria</small>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i> 
+                        <strong>Atenção:</strong> Alterar o nome da categoria afetará a visualização de todas as 
+                        tarefas que usam esta categoria. As tarefas continuarão vinculadas ao nome antigo até 
+                        serem editadas manualmente.
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('lista_categorias') }}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Voltar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Salvar Alterações
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Preview da categoria -->
+        <div class="card shadow mt-3">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-eye"></i> Preview</h6>
+            </div>
+            <div class="card-body">
+                <p class="mb-2">Assim ficará o badge da categoria:</p>
+                <span class="badge bg-{{ categoria.cor }}" style="font-size: 1rem;">
+                    {{ categoria.nome }}
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+// Atualizar preview ao mudar cor ou nome
+document.addEventListener('DOMContentLoaded', function() {
+    const nomeInput = document.getElementById('nome');
+    const corSelect = document.getElementById('cor');
+    const preview = document.querySelector('.card-body .badge');
+    
+    function updatePreview() {
+        preview.textContent = nomeInput.value || 'Nome da Categoria';
+        preview.className = 'badge bg-' + (corSelect.value || 'secondary');
+        preview.style.fontSize = '1rem';
+    }
+    
+    nomeInput.addEventListener('input', updatePreview);
+    corSelect.addEventListener('change', updatePreview);
+});
+</script>
+{% endblock %}
+{% endblock %}

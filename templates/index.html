@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+{% block title %}Início — Controle de Tarefas{% endblock %}
+
+{% block extra_css %}
+<style>
+.stat-card{background:var(--bg-card);border:1.3px solid var(--border-color);border-radius:14px;padding:20px 22px;display:flex;align-items:center;gap:16px;transition:transform .2s,box-shadow .2s;}
+.stat-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.2);}
+.stat-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;}
+.stat-icon.purple{background:rgba(124,106,247,.15);color:var(--accent);}
+.stat-icon.blue  {background:rgba(56,189,248,.15);color:var(--info);}
+.stat-icon.yellow{background:rgba(245,158,11,.15);color:var(--warning);}
+.stat-icon.green {background:rgba(34,197,94,.15);color:var(--success);}
+.stat-icon.red   {background:rgba(239,68,68,.15);color:var(--danger);}
+.stat-val{font-family:'Inter',sans-serif;font-size:1.8rem;font-weight:800;line-height:1;color:var(--text-primary);}
+.stat-lbl{font-size:0.9rem;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-top:3px;}
+.quick-card{background:var(--bg-card);border:1px solid var(--border-color);border-radius:14px;padding:22px;transition:transform .2s,border-color .2s;}
+.quick-card:hover{transform:translateY(-2px);border-color:var(--accent);}
+.quick-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;margin-bottom:12px;}
+.section-title{font-family:'Inter',sans-serif;font-size:2.2rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:14px;}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h2 style="font-family:'Inter',sans-serif;font-weight:800;font-size:1.6rem;margin:0;">
+            Olá, {{ current_user.username }}! 👋
+        </h2>
+        <p style="color:var(--text-muted);font-size:1.2rem;margin-top:4px;">
+            Aqui está o resumo das suas tarefas
+        </p>
+    </div>
+    <a href="{{ url_for('cadastro_tarefa') }}" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-1"></i> Nova Tarefa
+    </a>
+</div>
+
+<!-- Stats -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-4 col-lg">
+        <div class="stat-card">
+            <div class="stat-icon purple"><i class="bi bi-list-task"></i></div>
+            <div>
+                <div class="stat-val" id="stat-total">—</div>
+                <div class="stat-lbl">Total</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-lg">
+        <div class="stat-card">
+            <div class="stat-icon blue"><i class="bi bi-clock"></i></div>
+            <div>
+                <div class="stat-val" id="stat-pendente">—</div>
+                <div class="stat-lbl">Pendentes</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-lg">
+        <div class="stat-card">
+            <div class="stat-icon green"><i class="bi bi-check-circle"></i></div>
+            <div>
+                <div class="stat-val" id="stat-concluida">—</div>
+                <div class="stat-lbl">Concluídas</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-lg">
+        <div class="stat-card">
+            <div class="stat-icon red"><i class="bi bi-exclamation-triangle"></i></div>
+            <div>
+                <div class="stat-val" id="stat-importante">—</div>
+                <div class="stat-lbl">Alta Prioridade</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-lg">
+        <div class="stat-card">
+            <div class="stat-icon yellow"><i class="bi bi-calendar-check"></i></div>
+            <div>
+                <div class="stat-val" id="stat-hoje">—</div>
+                <div class="stat-lbl">Hoje</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Ações rápidas -->
+<p class="section-title">Ações rápidas</p>
+<div class="row g-3">
+    <div class="col-md-3 col-6">
+        <a href="{{ url_for('cadastro_tarefa') }}" style="text-decoration:none;">
+            <div class="quick-card">
+                <div class="quick-icon" style="background:rgba(124,106,247,.15);color:var(--accent);">
+                    <i class="bi bi-plus-circle"></i>
+                </div>
+                <div style="font-family:'Inter',sans-serif;font-weight:700;font-size:.9rem;">Nova Tarefa</div>
+                <div style="font-size:.78rem;color:var(--text-muted);margin-top:4px;">Criar uma tarefa</div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 col-6">
+        <a href="{{ url_for('lista_tarefas') }}" style="text-decoration:none;">
+            <div class="quick-card">
+                <div class="quick-icon" style="background:rgba(56,189,248,.15);color:var(--info);">
+                    <i class="bi bi-list-task"></i>
+                </div>
+                <div style="font-family:'Inter',sans-serif;font-weight:700;font-size:.9rem;">Minhas Tarefas</div>
+                <div style="font-size:.78rem;color:var(--text-muted);margin-top:4px;">Ver todas as tarefas</div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 col-6">
+        <a href="{{ url_for('lista_tarefas') }}?status=Pendente" style="text-decoration:none;">
+            <div class="quick-card">
+                <div class="quick-icon" style="background:rgba(245,158,11,.15);color:var(--warning);">
+                    <i class="bi bi-hourglass-split"></i>
+                </div>
+                <div style="font-family:'Inter',sans-serif;font-weight:700;font-size:.9rem;">Pendentes</div>
+                <div style="font-size:.78rem;color:var(--text-muted);margin-top:4px;">Tarefas em aberto</div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 col-6">
+        <a href="{{ url_for('lista_categorias') }}" style="text-decoration:none;">
+            <div class="quick-card">
+                <div class="quick-icon" style="background:rgba(34,197,94,.15);color:var(--success);">
+                    <i class="bi bi-tags"></i>
+                </div>
+                <div style="font-family:'Inter',sans-serif;font-weight:700;font-size:.9rem;">Categorias</div>
+                <div style="font-size:.78rem;color:var(--text-muted);margin-top:4px;">Gerenciar categorias</div>
+            </div>
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Buscar stats via API simples (contagem de tarefas)
+fetch('{{ url_for("lista_tarefas") }}?per_page=1000')
+  .then(function(r){ return r.text(); })
+  .then(function(html){
+    var parser = new DOMParser();
+    var doc = parser.parseFromString(html,'text/html');
+    var badge = doc.querySelector('.badge.bg-secondary');
+    if(badge){
+        var txt = badge.textContent.replace(/\D/g,'');
+        document.getElementById('stat-total').textContent = txt || '0';
+    }
+  }).catch(function(){});
+
+// Stats via fetch das rotas existentes — fallback simples
+var stats = [
+    {id:'stat-total',    url:'{{ url_for("lista_tarefas") }}'},
+    {id:'stat-pendente', url:'{{ url_for("lista_tarefas") }}?status=Pendente'},
+    {id:'stat-concluida',url:'{{ url_for("lista_tarefas") }}?status=Conclu%C3%ADda'},
+    {id:'stat-importante',url:'{{ url_for("lista_tarefas") }}?prioridade=Muito+Importante'},
+];
+
+stats.forEach(function(s){
+    fetch(s.url+'&per_page=1')
+      .then(function(r){return r.text();})
+      .then(function(html){
+        var m = html.match(/Total:\s*(\d+)\s*tarefas/);
+        if(m) document.getElementById(s.id).textContent = m[1];
+        else document.getElementById(s.id).textContent = '0';
+      }).catch(function(){ document.getElementById(s.id).textContent = '—'; });
+});
+
+// Stat "hoje"
+var hoje = new Date().toISOString().slice(0,10);
+fetch('{{ url_for("lista_tarefas") }}?data='+hoje+'&per_page=1')
+  .then(function(r){return r.text();})
+  .then(function(html){
+    var m = html.match(/Total:\s*(\d+)\s*tarefas/);
+    document.getElementById('stat-hoje').textContent = m ? m[1] : '0';
+  }).catch(function(){ document.getElementById('stat-hoje').textContent='—'; });
+</script>
+{% endblock %}

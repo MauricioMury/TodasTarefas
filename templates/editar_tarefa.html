@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Tarefa - Controle de Tarefas{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="bi bi-pencil"></i> Editar Tarefa</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('editar_tarefa', id=tarefa.id) }}">
+                    <div class="mb-3">
+                        <label for="tarefa" class="form-label">Tarefa *</label>
+                        <input type="text" class="form-control" id="tarefa" name="tarefa"
+                               value="{{ tarefa.tarefa }}" required maxlength="200">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="comentario" class="form-label">Comentário / Observações</label>
+                        <textarea class="form-control" id="comentario" name="comentario" rows="3"
+                            placeholder="Adicione notas, observações ou detalhes sobre a tarefa...">{{ tarefa.comentario if tarefa.comentario else '' }}</textarea>
+                        <small class="form-text text-muted">Opcional</small>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="data_meta" class="form-label">Data Meta *</label>
+                            <input type="date" class="form-control" id="data_meta" name="data_meta"
+                                value="{{ tarefa.data_meta.strftime('%Y-%m-%d') }}" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="data_realizado" class="form-label">Data Realizado</label>
+                            <input type="date" class="form-control" id="data_realizado" name="data_realizado"
+                                value="{% if tarefa.data_realizado %}{{ tarefa.data_realizado.strftime('%Y-%m-%d') }}{% endif %}">
+                            <small class="form-text text-muted">Preencha se já foi concluída</small>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="hora_inicio" class="form-label">Hora Início *</label>
+                            <input type="time" class="form-control" id="hora_inicio" name="hora_inicio"
+                                value="{{ tarefa.hora_inicio.strftime('%H:%M') }}" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="hora_fim" class="form-label">Hora Fim</label>
+                            <input type="time" class="form-control" id="hora_fim" name="hora_fim"
+                                value="{{ tarefa.hora_fim.strftime('%H:%M') if tarefa.hora_fim else '' }}">
+                            <small class="form-text text-muted">Opcional</small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="prioridade" class="form-label">Prioridade *</label>
+                        <select class="form-select" id="prioridade" name="prioridade" required>
+                            <option value="">Selecione...</option>
+                            <option value="Muito Importante" {% if tarefa.prioridade=='Muito Importante' %}selected{% endif %}>
+                                🔴 Muito Importante</option>
+                            <option value="Importante" {% if tarefa.prioridade=='Importante' %}selected{% endif %}>
+                                🟡 Importante</option>
+                            <option value="Normal" {% if tarefa.prioridade=='Normal' %}selected{% endif %}>
+                                🔵 Normal</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="recorrencia" class="form-label">Recorrência *</label>
+                        <select class="form-select" id="recorrencia" name="recorrencia" required>
+                            <option value="">Selecione...</option>
+                            <option value="SEGUNDA" {% if tarefa.recorrencia=='SEGUNDA' %}selected{% endif %}>SEGUNDA</option>
+                            <option value="TERÇA" {% if tarefa.recorrencia=='TERÇA' %}selected{% endif %}>TERÇA</option>
+                            <option value="QUARTA" {% if tarefa.recorrencia=='QUARTA' %}selected{% endif %}>QUARTA</option>
+                            <option value="QUINTA" {% if tarefa.recorrencia=='QUINTA' %}selected{% endif %}>QUINTA</option>
+                            <option value="SEXTA" {% if tarefa.recorrencia=='SEXTA' %}selected{% endif %}>SEXTA</option>
+                            <option value="SÁBADO" {% if tarefa.recorrencia=='SÁBADO' %}selected{% endif %}>SÁBADO</option>
+                            <option value="DOMINGO" {% if tarefa.recorrencia=='DOMINGO' %}selected{% endif %}>DOMINGO</option>
+                            <option value="SEGUNDA e SÁBADO" {% if tarefa.recorrencia=='SEGUNDA e SÁBADO' %}selected{% endif %}>SEGUNDA e SÁBADO</option>
+                            <option value="SEGUNDA e TERÇA" {% if tarefa.recorrencia=='SEGUNDA e TERÇA' %}selected{% endif %}>SEGUNDA e TERÇA</option>
+                            <option value="SEGUNDA e SEXTA" {% if tarefa.recorrencia=='SEGUNDA e SEXTA' %}selected{% endif %}>SEGUNDA e SEXTA</option>
+                            <option value="TERÇA e QUARTA" {% if tarefa.recorrencia=='TERÇA e QUARTA' %}selected{% endif %}>TERÇA e QUARTA</option>
+                            <option value="ESPORÁDICO" {% if tarefa.recorrencia=='ESPORÁDICO' %}selected{% endif %}>ESPORÁDICO</option>
+                            <option value="DIÁRIO" {% if tarefa.recorrencia=='DIÁRIO' %}selected{% endif %}>DIÁRIO</option>
+                            <option value="MENSAL" {% if tarefa.recorrencia=='MENSAL' %}selected{% endif %}>MENSAL</option>
+                            <option value="ANUAL" {% if tarefa.recorrencia=='ANUAL' %}selected{% endif %}>ANUAL</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="categoria" class="form-label">Categoria *</label>
+                        <div class="input-group">
+                            <select class="form-select" id="categoria" name="categoria" required>
+                                <option value="">Selecione...</option>
+                                {% for cat in categorias %}
+                                <option value="{{ cat.nome }}" {% if tarefa.categoria==cat.nome %}selected{% endif %}>
+                                    {{ cat.nome }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <a href="{{ url_for('cadastro_categoria') }}" class="btn btn-outline-primary"
+                               title="Criar nova categoria" target="_blank">
+                                <i class="bi bi-plus-circle"></i>
+                            </a>
+                        </div>
+                        <small class="form-text text-muted">
+                            Não encontrou?
+                            <a href="{{ url_for('cadastro_categoria') }}" target="_blank">Clique aqui para criar</a>
+                        </small>
+                    </div>
+
+                    <!-- ── 🆕 NOTIFICAÇÕES WHATSAPP retirei, coloqeui e-mail ── -->
+                    <hr>
+                    <i class="bi bi-envelope text-primary"></i> Notificações por E-mail
+                        {% if not current_user.email_notif %}
+                        <small class="text-muted fw-normal">
+                            — <a href="{{ url_for('perfil') }}" target="_blank">configure seu e-mail no perfil</a>
+                        </small>
+                        {% endif %}
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="notif_datetime_1" class="form-label">
+                                <i class="bi bi-bell"></i> Notificação 1
+                                {% if tarefa.notif_enviada_1 %}
+                                <span class="badge bg-success ms-1" title="Notificação já enviada">
+                                    <i class="bi bi-check2"></i> enviada
+                                </span>
+                                {% endif %}
+                            </label>
+                            <input type="datetime-local"
+                                   class="form-control"
+                                   id="notif_datetime_1"
+                                   name="notif_datetime_1"
+                                   value="{{ tarefa.notif_datetime_1.strftime('%Y-%m-%dT%H:%M') if tarefa.notif_datetime_1 else '' }}"
+                                   {% if not current_user.email_notif %}disabled title="Configure o e-mail no perfil primeiro"{% endif %}>
+                            <small class="form-text text-muted">
+                                Opcional
+                                {% if tarefa.notif_enviada_1 %}
+                                — alterar aqui <strong>reativa</strong> a notificação
+                                {% endif %}
+                            </small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="notif_datetime_2" class="form-label">
+                                <i class="bi bi-bell"></i> Notificação 2
+                                {% if tarefa.notif_enviada_2 %}
+                                <span class="badge bg-success ms-1" title="Notificação já enviada">
+                                    <i class="bi bi-check2"></i> enviada
+                                </span>
+                                {% endif %}
+                            </label>
+                            <input type="datetime-local"
+                                   class="form-control"
+                                   id="notif_datetime_2"
+                                   name="notif_datetime_2"
+                                   value="{{ tarefa.notif_datetime_2.strftime('%Y-%m-%dT%H:%M') if tarefa.notif_datetime_2 else '' }}"
+                                   {% if not current_user.email_notif %}disabled title="Configure o e-mail no perfil primeiro"{% endif %}>
+                            <small class="form-text text-muted">
+                                Opcional
+                                {% if tarefa.notif_enviada_2 %}
+                                — alterar aqui <strong>reativa</strong> a notificação
+                                {% endif %}
+                            </small>
+                        </div>
+                    </div>
+                    <!-- ── fim notificações ── -->
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('lista_tarefas',
+                            categoria=filtros.categoria,
+                            prioridade=filtros.prioridade,
+                            status=filtros.status,
+                            data=filtros.data,
+                            page=filtros.page,
+                            per_page=filtros.per_page) }}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Voltar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Salvar Alterações
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

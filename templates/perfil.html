@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Meu Perfil - Controle de Tarefas{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+
+        <!-- ── Dados do perfil ── -->
+        <div class="card shadow mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="bi bi-person-circle"></i> Meu Perfil
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label text-muted small">Usuário</label>
+                    <div class="fw-bold fs-5">{{ current_user.username }}</div>
+                </div>
+                <hr>
+
+                <!-- ── Formulário e-mail ── -->
+                <h6 class="mb-3">
+                    <i class="bi bi-envelope text-primary"></i> Notificações por E-mail
+                </h6>
+                <form method="POST" action="{{ url_for('perfil') }}">
+                    <div class="mb-3">
+                        <label for="email_notif" class="form-label">
+                            E-mail para notificações
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-envelope"></i>
+                            </span>
+                            <input type="email"
+                                   class="form-control"
+                                   id="email_notif"
+                                   name="email_notif"
+                                   placeholder="seuemail@gmail.com"
+                                   value="{{ current_user.email_notif or '' }}"
+                                   maxlength="120">
+                        </div>
+                        <small class="form-text text-muted">
+                            Você receberá lembretes de tarefas neste endereço
+                        </small>
+                    </div>
+
+                    {% if current_user.email_notif %}
+                    <div class="alert alert-success py-2">
+                        <i class="bi bi-check-circle"></i>
+                        Notificações ativas para
+                        <strong>{{ current_user.email_notif }}</strong>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning py-2">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        E-mail não configurado — notificações desativadas
+                    </div>
+                    {% endif %}
+
+                    <div class="d-flex justify-content-end">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Salvar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- ── Informações ── -->
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="bi bi-info-circle"></i> Como funcionam as notificações
+                </h6>
+            </div>
+            <div class="card-body">
+                <ul class="mb-0 small text-muted">
+                    <li class="mb-2">Cadastre ou edite uma tarefa e defina uma <strong>data e hora de notificação</strong></li>
+                    <li class="mb-2">No horário definido, você receberá um e-mail com os detalhes da tarefa</li>
+                    <li class="mb-2">Cada tarefa suporta até <strong>2 notificações</strong> independentes</li>
+                    <li>Alterar a data de notificação em uma tarefa já enviada <strong>reativa</strong> o envio</li>
+                </ul>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}Cadastrar Tarefa - Controle de Tarefas{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="bi bi-plus-circle"></i>
+                    {% if duplicate_id %}
+                    Duplicar Tarefa
+                    {% else %}
+                    Cadastrar Nova Tarefa
+                    {% endif %}
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('cadastro_tarefa') }}">
+                    {% if duplicate_id %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> Você está duplicando uma tarefa. Preencha a nova data e hora fim.
+                    </div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label for="tarefa" class="form-label">Tarefa *</label>
+                        <input type="text" class="form-control" id="tarefa" name="tarefa"
+                            value="{{ tarefa if tarefa else '' }}" required maxlength="200">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="comentario" class="form-label">Comentário / Observações</label>
+                        <textarea class="form-control" id="comentario" name="comentario" rows="3"
+                            placeholder="Adicione notas, observações ou detalhes sobre a tarefa...">{{ comentario if comentario else '' }}</textarea>
+                        <small class="form-text text-muted">Opcional</small>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="data_meta" class="form-label">Data Meta *</label>
+                            <input type="date" class="form-control" id="data_meta" name="data_meta" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="data_realizado" class="form-label">Data Realizado</label>
+                            <input type="date" class="form-control" id="data_realizado" name="data_realizado">
+                            <small class="form-text text-muted">Preencha se já foi concluída</small>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="hora_inicio" class="form-label">Hora Início *</label>
+                            <input type="time" class="form-control" id="hora_inicio" name="hora_inicio"
+                                value="{{ hora_inicio if hora_inicio else '' }}" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="hora_fim" class="form-label">Hora Fim</label>
+                            <input type="time" class="form-control" id="hora_fim" name="hora_fim">
+                            <small class="form-text text-muted">Opcional</small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="prioridade" class="form-label">Prioridade *</label>
+                        <select class="form-select" id="prioridade" name="prioridade" required>
+                            <option value="">Selecione...</option>
+                            <option value="Muito Importante" {% if prioridade=='Muito Importante' %}selected{% endif %}>
+                                🔴 Muito Importante</option>
+                            <option value="Importante" {% if prioridade=='Importante' %}selected{% endif %}>
+                                🟡 Importante</option>
+                            <option value="Normal" {% if prioridade=='Normal' %}selected{% endif %}>
+                                🔵 Normal</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="recorrencia" class="form-label">Recorrência *</label>
+                        <select class="form-select" id="recorrencia" name="recorrencia" required>
+                            <option value="">Selecione...</option>
+                            <option value="SEGUNDA" {% if recorrencia=='SEGUNDA' %}selected{% endif %}>SEGUNDA</option>
+                            <option value="TERÇA" {% if recorrencia=='TERÇA' %}selected{% endif %}>TERÇA</option>
+                            <option value="QUARTA" {% if recorrencia=='QUARTA' %}selected{% endif %}>QUARTA</option>
+                            <option value="QUINTA" {% if recorrencia=='QUINTA' %}selected{% endif %}>QUINTA</option>
+                            <option value="SEXTA" {% if recorrencia=='SEXTA' %}selected{% endif %}>SEXTA</option>
+                            <option value="SÁBADO" {% if recorrencia=='SÁBADO' %}selected{% endif %}>SÁBADO</option>
+                            <option value="DOMINGO" {% if recorrencia=='DOMINGO' %}selected{% endif %}>DOMINGO</option>
+                            <option value="SEGUNDA e SÁBADO" {% if recorrencia=='SEGUNDA e SÁBADO' %}selected{% endif %}>SEGUNDA e SÁBADO</option>
+                            <option value="SEGUNDA e TERÇA" {% if recorrencia=='SEGUNDA e TERÇA' %}selected{% endif %}>SEGUNDA e TERÇA</option>
+                            <option value="SEGUNDA e SEXTA" {% if recorrencia=='SEGUNDA e SEXTA' %}selected{% endif %}>SEGUNDA e SEXTA</option>
+                            <option value="TERÇA e QUARTA" {% if recorrencia=='TERÇA e QUARTA' %}selected{% endif %}>TERÇA e QUARTA</option>
+                            <option value="ESPORÁDICO" {% if recorrencia=='ESPORÁDICO' %}selected{% endif %}>ESPORÁDICO</option>
+                            <option value="DIÁRIO" {% if recorrencia=='DIÁRIO' %}selected{% endif %}>DIÁRIO</option>
+                            <option value="MENSAL" {% if recorrencia=='MENSAL' %}selected{% endif %}>MENSAL</option>
+                            <option value="ANUAL" {% if recorrencia=='ANUAL' %}selected{% endif %}>ANUAL</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="categoria" class="form-label">Categoria *</label>
+                        <div class="input-group">
+                            <select class="form-select" id="categoria" name="categoria" required>
+                                <option value="">Selecione...</option>
+                                {% for cat in categorias %}
+                                <option value="{{ cat.nome }}" {% if categoria==cat.nome %}selected{% endif %}>
+                                    {{ cat.nome }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <a href="{{ url_for('cadastro_categoria') }}" class="btn btn-outline-primary"
+                               title="Criar nova categoria" target="_blank">
+                                <i class="bi bi-plus-circle"></i>
+                            </a>
+                        </div>
+                        <small class="form-text text-muted">
+                            Não encontrou?
+                            <a href="{{ url_for('cadastro_categoria') }}" target="_blank">Clique aqui para criar</a>
+                        </small>
+                    </div>
+
+                    <!-- ── 🆕 NOTIFICAÇÕES WHATSAPP retirado, coloquei e-mail ── -->
+                    <hr>
+                    <i class="bi bi-envelope text-primary"></i> Notificações por E-mail
+                        {% if not current_user.email_notif %}
+                        <small class="text-muted fw-normal">
+                            — <a href="{{ url_for('perfil') }}" target="_blank">configure seu e-mail no perfil</a>
+                        </small>
+                        {% endif %}
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="notif_datetime_1" class="form-label">
+                                <i class="bi bi-bell"></i> Notificação 1
+                            </label>
+                            <input type="datetime-local"
+                                   class="form-control"
+                                   id="notif_datetime_1"
+                                   name="notif_datetime_1"
+                                   value="{{ notif_datetime_1 if notif_datetime_1 else '' }}"
+                                   {% if not current_user.email_notif %}disabled title="Configure o e-mail no perfil primeiro"{% endif %}>
+                            <small class="form-text text-muted">Opcional</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="notif_datetime_2" class="form-label">
+                                <i class="bi bi-bell"></i> Notificação 2
+                            </label>
+                            <input type="datetime-local"
+                                   class="form-control"
+                                   id="notif_datetime_2"
+                                   name="notif_datetime_2"
+                                   value="{{ notif_datetime_2 if notif_datetime_2 else '' }}"
+                                   {% if not current_user.email_notif %}disabled title="Configure o e-mail no perfil primeiro"{% endif %}                            <small class="form-text text-muted">Opcional</small>
+                        </div>
+                    </div>
+                    <!-- ── fim notificações ── -->
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('lista_tarefas',
+                            categoria=filtros.categoria,
+                            prioridade=filtros.prioridade,
+                            status=filtros.status,
+                            data=filtros.data,
+                            page=filtros.page,
+                            per_page=filtros.per_page) }}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Voltar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Cadastrar Tarefa
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
