@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+
+{% block title %}Entrada Rápida - Controle de Tarefas{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="bi bi-lightning-charge-fill"></i> Entrada Rápida
+                </h4>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-4" style="font-size:0.875rem;">
+                    Digite como você pensaria. Exemplos:<br>
+                    <code>"Reunião amanhã 14h"</code> &nbsp;·&nbsp;
+                    <code>"Academia dia 29 07:30"</code> &nbsp;·&nbsp;
+                    <code>"Consulta médica 15/04 às 9h"</code>
+                </p>
+
+                <div class="mb-3">
+                    <textarea class="form-control"
+                              id="inputRapido"
+                              rows="3"
+                              placeholder="Digite sua tarefa aqui..."
+                              autofocus></textarea>
+                </div>
+
+                <!-- Preview -->
+                <div id="preview" class="card mb-4" style="display:none; border-color: var(--accent);">
+                    <div class="card-body py-3">
+                        <div class="row g-2 align-items-center">
+                            <div class="col-12">
+                                <span style="font-size:0.7rem;font-weight:700;text-transform:uppercase;
+                                             letter-spacing:0.05em;color:var(--text-muted);">Preview</span>
+                            </div>
+                            <div class="col-12">
+                                <strong id="prevTitulo" style="font-size:1rem;"></strong>
+                            </div>
+                            <div class="col-auto">
+                                <span class="badge bg-primary" id="prevData"></span>
+                            </div>
+                            <div class="col-auto">
+                                <span class="badge bg-secondary" id="prevHora"></span>
+                            </div>
+                            <div class="col-12 mt-1" id="prevAviso" style="display:none;">
+                                <small class="text-warning">
+                                    <i class="bi bi-exclamation-triangle"></i>
+                                    <span id="prevAvisoTexto"></span>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botão criar -->
+                <form method="POST" action="{{ url_for('cadastro_tarefa') }}" id="formRapido">
+                    <input type="hidden" name="tarefa"      id="fTarefa">
+                    <input type="hidden" name="data_meta"   id="fData">
+                    <input type="hidden" name="hora_inicio" id="fHora">
+                    <input type="hidden" name="prioridade"  value="Importante">
+                    <input type="hidden" name="recorrencia" value="ESPORÁDICO">
+                    <input type="hidden" name="categoria"   id="fCategoria">
+                    <input type="hidden" name="comentario"  value="">
+
+                    <div class="d-flex gap-2 justify-content-between">
+                        <a href="{{ url_for('lista_tarefas') }}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Voltar
+                        </a>
+                        <button type="submit" class="btn btn-primary" id="btnCriar" disabled>
+                            <i class="bi bi-check-circle"></i> Criar Tarefa
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Dicas -->
+        <div class="card shadow mt-3">
+            <div class="card-body py-3">
+                <p class="mb-2" style="font-size:0.75rem;font-weight:700;
+                                       text-transform:uppercase;letter-spacing:0.05em;
+                                       color:var(--text-muted);">
+                    <i class="bi bi-lightbulb"></i> Formatos reconhecidos
+                </p>
+                <div class="row g-1" style="font-size:0.82rem;color:var(--text-secondary);">
+                    <div class="col-6"><i class="bi bi-check2 text-success"></i> hoje, amanhã</div>
+                    <div class="col-6"><i class="bi bi-check2 text-success"></i> dia 15</div>
+                    <div class="col-6"><i class="bi bi-check2 text-success"></i> 26/03 ou 26/03/2026</div>
+                    <div class="col-6"><i class="bi bi-check2 text-success"></i> 26-03 ou 26-03-2026</div>
+                    <div class="col-6"><i class="bi bi-check2 text-success"></i> 15h, 15hs, 15:00</div>
+                    <div class="col-6"><i class="bi bi-check2 text-success"></i> às 9, às 9h</div>
+                </div>
+                <p class="mb-0 mt-2" style="font-size:0.78rem;color:var(--text-muted);">
+                    Defaults: prioridade <strong>Importante</strong> · recorrência <strong>ESPORÁDICO</strong> · categoria <strong>Rápida</strong>
+                </p>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    // Categoria default: primeira com nome "Rápida", senão primeira disponível
+    const CATEGORIAS = {{ categorias | tojson }};
+    const catRapida = CATEGORIAS.find(c => c.nome === 'Rápida')
+                   || CATEGORIAS[0]
+                   || { nome: '' };
+
+    document.getElementById('fCategoria').value = catRapida.nome;
+
+    // ── Parser ───────────────────────────────────────────────────
+    function parseTexto(txt) {
+        let resto = txt.trim();
+        let data  = null;   // Date object
+        let hora  = null;   // "HH:MM"
+        const avisos = [];
+
+        // ── DATA ────────────────────────────────────────────────
+
+        const hoje   = new Date();
+        hoje.setHours(0,0,0,0);
+        const amanha = new Date(hoje);
+        amanha.setDate(hoje.getDate() + 1);
+
+        // "hoje"
+        if (/\bhoje\b/i.test(resto)) {
+            data  = new Date(hoje);
+            resto = resto.replace(/\bhoje\b/gi, '').trim();
+        }
+        // "amanhã" / "amanha"
+        else if (/\bamanh[aã]\b/i.test(resto)) {
+            data  = new Date(amanha);
+            resto = resto.replace(/\bamanh[aã]\b/gi, '').trim();
+        }
+        // "dia 29"
+        else {
+            const mDia = resto.match(/\bdia\s+(\d{1,2})\b/i);
+            if (mDia) {
+                const dia = parseInt(mDia[1], 10);
+                const d   = new Date(hoje.getFullYear(), hoje.getMonth(), dia);
+                // Se o dia já passou neste mês, avança para o próximo
+                if (d < hoje) d.setMonth(d.getMonth() + 1);
+                data  = d;
+                resto = resto.replace(mDia[0], '').trim();
+            }
+        }
+
+        // "26/03/2026" ou "26/03"
+        if (!data) {
+            const mData = resto.match(/\b(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?\b/);
+            if (mData) {
+                const dia = parseInt(mData[1], 10);
+                const mes = parseInt(mData[2], 10) - 1;
+                let ano   = mData[3] ? parseInt(mData[3], 10) : hoje.getFullYear();
+                if (ano < 100) ano += 2000;
+                data  = new Date(ano, mes, dia);
+                resto = resto.replace(mData[0], '').trim();
+            }
+        }
+
+        // ── HORA ────────────────────────────────────────────────
+
+        // "às 9h", "às 9:30", "às 14"
+        let mHora = resto.match(/\b[àa]s?\s+(\d{1,2})(?::(\d{2}))?h?s?\b/i);
+        if (mHora) {
+            hora  = fmt(parseInt(mHora[1],10), mHora[2] ? parseInt(mHora[2],10) : 0);
+            resto = resto.replace(mHora[0], '').trim();
+        }
+
+        if (!hora) {
+            // "15:00" ou "9:30"
+            mHora = resto.match(/\b(\d{1,2}):(\d{2})\b/);
+            if (mHora) {
+                hora  = fmt(parseInt(mHora[1],10), parseInt(mHora[2],10));
+                resto = resto.replace(mHora[0], '').trim();
+            }
+        }
+
+        if (!hora) {
+            // "15h" ou "15hs"
+            mHora = resto.match(/\b(\d{1,2})h(?:s)?\b/i);
+            if (mHora) {
+                hora  = fmt(parseInt(mHora[1],10), 0);
+                resto = resto.replace(mHora[0], '').trim();
+            }
+        }
+
+        // ── Fallbacks ────────────────────────────────────────────
+        if (!data) {
+            data = new Date(hoje);
+            avisos.push('Data não identificada — usando hoje');
+        }
+        if (!hora) {
+            hora = '08:00';
+            avisos.push('Hora não identificada — usando 08:00');
+        }
+
+        // Limpar pontuação solta no título
+        resto = resto.replace(/^[,\.\-\s]+|[,\.\-\s]+$/g, '').replace(/\s{2,}/g, ' ');
+
+        return {
+            titulo: resto || txt.trim(),
+            data:   toISO(data),
+            hora:   hora,
+            avisos: avisos
+        };
+    }
+
+    function fmt(h, m) {
+        if (h > 23 || m > 59) return null;
+        return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
+    }
+
+    function toISO(d) {
+        return d.getFullYear()
+             + '-' + String(d.getMonth()+1).padStart(2,'0')
+             + '-' + String(d.getDate()).padStart(2,'0');
+    }
+
+    function formatarDataBr(iso) {
+        const [y,m,d] = iso.split('-');
+        return `${d}/${m}/${y}`;
+    }
+
+    // ── UI ───────────────────────────────────────────────────────
+    const input    = document.getElementById('inputRapido');
+    const preview  = document.getElementById('preview');
+    const btnCriar = document.getElementById('btnCriar');
+
+    input.addEventListener('input', function () {
+        const txt = this.value.trim();
+        if (!txt) {
+            preview.style.display = 'none';
+            btnCriar.disabled = true;
+            return;
+        }
+
+        const r = parseTexto(txt);
+
+        document.getElementById('prevTitulo').textContent = r.titulo || '(sem título)';
+        document.getElementById('prevData').textContent   = formatarDataBr(r.data);
+        document.getElementById('prevHora').textContent   = r.hora;
+
+        const avisoEl = document.getElementById('prevAviso');
+        if (r.avisos.length > 0) {
+            document.getElementById('prevAvisoTexto').textContent = r.avisos.join(' · ');
+            avisoEl.style.display = 'block';
+        } else {
+            avisoEl.style.display = 'none';
+        }
+
+        preview.style.display = 'block';
+        btnCriar.disabled = !r.titulo;
+
+        // Preencher form hidden
+        document.getElementById('fTarefa').value = r.titulo;
+        document.getElementById('fData').value   = r.data;
+        document.getElementById('fHora').value   = r.hora;
+    });
+
+    // Submeter com Enter (Ctrl+Enter ou apenas Enter no textarea)
+    input.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey && !btnCriar.disabled) {
+            e.preventDefault();
+            document.getElementById('formRapido').submit();
+        }
+    });
+})();
+</script>
+{% endblock %}

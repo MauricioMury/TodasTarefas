@@ -74,6 +74,11 @@
             background: var(--bg-secondary) !important;
             border-bottom: 1px solid var(--border-color);
             padding: 0.55rem 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 1030;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
         }
 
         .navbar-brand {
@@ -457,6 +462,11 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('calendario') }}">
                             <i class="bi bi-calendar3"></i> Calendário
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('entrada_rapida') }}">
+                            <i class="bi bi-lightning-charge-fill"></i> Entrada Rápida
                         </a>
                     </li>
                 </ul>
