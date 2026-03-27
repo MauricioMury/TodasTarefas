@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-
+/* ── Data: 27/03/2026 - 16:33 ── */
 {% block title %}Calendário - Controle de Tarefas{% endblock %}
 
 {% block extra_css %}
@@ -23,6 +23,8 @@
         --cal-shadow:        0 2px 12px rgba(0,0,0,0.08);
         --cal-toggle-bg:     #e9ecef;
         --cal-toggle-icon:   #495057;
+        --cal-drop-bg:       #c8dafe;
+        --cal-drop-border:   #0d6efd;
     }
 
     /* ── Tema: Dark ── */
@@ -42,6 +44,8 @@
         --cal-shadow:        0 2px 16px rgba(0,0,0,0.35);
         --cal-toggle-bg:     #2e2e40;
         --cal-toggle-icon:   #a0a0c0;
+        --cal-drop-bg:       #1a2a45;
+        --cal-drop-border:   #4d8ef0;
     }
 
     /* ── Fundo da página no dark ── */
@@ -198,6 +202,18 @@
 
     .cal-day.today.selected .cal-day-num {
         background: var(--cal-selected-bg);
+    }
+
+    /* Drag & drop */
+    .cal-day.drag-over {
+        background: var(--cal-drop-bg) !important;
+        outline: 2px dashed var(--cal-drop-border);
+        outline-offset: -2px;
+    }
+
+    .cal-task-card.dragging {
+        opacity: 0.45;
+        transform: scale(0.98);
     }
 
     /* Pontos */
@@ -795,6 +811,10 @@
     let filtroCategoria = '';
     let filtroStatus   = '';
 
+    // Drag & drop
+    let dragId     = null;
+    let dragOrigin = null;
+
     // ── Filtragem ────────────────────────────────────────────────
     function tarefasFiltradas() {
         if (!filtroTexto && !filtroCategoria && !filtroStatus) return TAREFAS;
@@ -993,6 +1013,19 @@
             renderCalendar();
         });
 
+        /* Drop target */
+        div.addEventListener('dragover', e => {
+            e.preventDefault();
+            div.classList.add('drag-over');
+        });
+        div.addEventListener('dragleave', () => div.classList.remove('drag-over'));
+        div.addEventListener('drop', e => {
+            e.preventDefault();
+            div.classList.remove('drag-over');
+            if (!dragId || dateISO === dragOrigin) return;
+            moverTarefa(dragId, dragOrigin, dateISO);
+        });
+
         return div;
     }
 
@@ -1082,6 +1115,17 @@
         tarefas.forEach(t => {
             const card = document.createElement('div');
             card.className = 'cal-task-card';
+            card.draggable = true;
+            card.dataset.id   = t.id;
+            card.dataset.data = dateISO;
+
+            card.addEventListener('dragstart', e => {
+                dragId     = t.id;
+                dragOrigin = dateISO;
+                card.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+            });
+            card.addEventListener('dragend', () => card.classList.remove('dragging'));
 
             const barColor = corHex(t.categoria);
             const priClasses = {
@@ -1144,6 +1188,51 @@
         return String(str)
             .replace(/&/g,'&amp;').replace(/</g,'&lt;')
             .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // ── Drag & drop: mover tarefa ────────────────────────────────
+    function moverTarefa(tarefaId, origem, destino) {
+        fetch(`/mover_tarefa/${tarefaId}`, {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ data_meta: destino })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.ok) {
+                // Atualiza o array global TAREFAS (buildTarefasPorDia recalcula a partir dele)
+                const tarefa = TAREFAS.find(t => t.id === tarefaId);
+                if (tarefa) tarefa.data_meta = destino;
+                selectedDay = destino;
+                renderCalendar();
+                const p = destino.split('-');
+                showToast(`Tarefa movida para ${p[2]}/${p[1]}/${p[0]}`, true);
+            } else {
+                showToast(data.erro || 'Erro ao mover tarefa', false);
+            }
+        })
+        .catch(() => showToast('Erro de conexão', false));
+    }
+
+    function showToast(msg, ok) {
+        let el = document.getElementById('calToast');
+        if (!el) {
+            el = document.createElement('div');
+            el.id = 'calToast';
+            el.style.cssText = `
+                position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+                padding: 10px 20px; border-radius: 10px; font-size: 0.85rem;
+                font-weight: 600; z-index: 9999; pointer-events: none;
+                transition: opacity 0.3s;
+            `;
+            document.body.appendChild(el);
+        }
+        el.textContent = msg;
+        el.style.background = ok ? '#22c55e' : '#ef4444';
+        el.style.color = '#fff';
+        el.style.opacity = '1';
+        clearTimeout(el._timer);
+        el._timer = setTimeout(() => { el.style.opacity = '0'; }, 2500);
     }
 
     // ── Navegação ────────────────────────────────────────────────
