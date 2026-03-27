@@ -107,7 +107,7 @@
 <script>
 (function () {
     // Categoria default: primeira com nome "Rápida", senão primeira disponível
-    const CATEGORIAS = {{ categorias | tojson }};
+    const CATEGORIAS = {{ categorias_json | safe }};
     const catRapida = CATEGORIAS.find(c => c.nome === 'Rápida')
                    || CATEGORIAS[0]
                    || { nome: '' };

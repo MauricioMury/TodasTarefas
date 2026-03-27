@@ -73,8 +73,7 @@
 
     /* ── Layout principal ── */
     .cal-wrapper {
-        max-width: 900px;
-        margin: 0 auto;
+        width: 100%;
     }
 
     /* ── Cabeçalho ── */
@@ -312,10 +311,10 @@
     }
 
     .cal-task-name {
-        font-size: 0.92rem;
+        font-size: 1rem;
         font-weight: 600;
-        color: #212529;
-        margin-bottom: 4px;
+        color: var(--cal-text);
+        margin-bottom: 6px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -324,12 +323,12 @@
     .cal-task-meta {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 6px;
         flex-wrap: wrap;
     }
 
     .cal-task-time {
-        font-size: 0.78rem;
+        font-size: 0.82rem;
         color: var(--cal-muted);
         display: flex;
         align-items: center;
@@ -337,12 +336,42 @@
     }
 
     .cal-task-badge {
-        font-size: 0.68rem;
-        padding: 1px 7px;
+        font-size: 0.75rem;
+        padding: 2px 9px;
         border-radius: 20px;
         font-weight: 600;
         letter-spacing: 0.02em;
     }
+
+    /* ── Botões de ação do card ── */
+    .cal-task-actions {
+        display: flex;
+        gap: 4px;
+        padding: 8px 10px 8px 4px;
+        align-items: center;
+        flex-shrink: 0;
+    }
+
+    .cal-task-btn {
+        background: transparent;
+        border: 1px solid var(--cal-border);
+        border-radius: 7px;
+        color: var(--cal-muted);
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 0.78rem;
+        transition: all 0.15s;
+        text-decoration: none;
+    }
+
+    .cal-task-btn:hover          { border-color: var(--cal-primary); color: var(--cal-primary); }
+    .cal-task-btn.btn-success:hover { border-color: #22c55e; color: #22c55e; }
+    .cal-task-btn.btn-danger:hover  { border-color: #ef4444; color: #ef4444; }
+    .cal-task-btn.btn-info:hover    { border-color: #38bdf8; color: #38bdf8; }
 
     /* ── Responsivo ── */
     @media (max-width: 768px) {
@@ -376,13 +405,18 @@
     /* ── KPIs ── */
     .cal-kpis {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(3, 1fr);
         gap: 12px;
-        margin-bottom: 20px;
+        margin-bottom: 12px;
     }
 
     @media (max-width: 768px) {
         .cal-kpis { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    /* Gráfico em linha separada, largura total */
+    .cal-kpi-chart-row {
+        margin-bottom: 20px;
     }
 
     .cal-kpi-card {
@@ -391,6 +425,25 @@
         border-radius: var(--cal-radius);
         padding: 14px 16px;
         box-shadow: var(--cal-shadow);
+    }
+
+    /* Card do gráfico — linha completa, altura maior */
+    .cal-kpi-card-chart {
+        background: var(--cal-surface);
+        border: 1px solid var(--cal-border);
+        border-radius: var(--cal-radius);
+        padding: 14px 16px;
+        box-shadow: var(--cal-shadow);
+        height: 160px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .cal-chart-container {
+        position: relative;
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
     }
 
     .cal-kpi-label {
@@ -538,13 +591,39 @@
         font-weight: 600;
         padding: 3px 8px;
     }
+    /* ── Layout principal: calendário + lista lado a lado ── */
+    .cal-main-layout {
+        display: grid;
+        grid-template-columns: 1fr 380px;
+        gap: 20px;
+        align-items: start;
+    }
+
+    .cal-col-list {
+        position: sticky;
+        top: 70px;
+    }
+
+    .cal-col-list .cal-list-section {
+        margin-top: 0;
+    }
+
+    /* No mobile empilha verticalmente */
+    @media (max-width: 900px) {
+        .cal-main-layout {
+            grid-template-columns: 1fr;
+        }
+        .cal-col-list {
+            position: static;
+        }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="cal-wrapper">
 
-    <!-- ── KPIs ── -->
+    <!-- ── KPIs (3 cards numéricos) ── -->
     <div class="cal-kpis" id="calKpis">
         <div class="cal-kpi-card">
             <div class="cal-kpi-label"><i class="bi bi-check-circle-fill" style="color:#22c55e;"></i> Concluídas</div>
@@ -561,9 +640,15 @@
             <div class="cal-kpi-value" id="kpiTaxa">—</div>
             <div class="cal-kpi-bar"><div class="cal-kpi-bar-fill" id="kpiTaxaBar" style="width:0%"></div></div>
         </div>
-        <div class="cal-kpi-card">
-            <div class="cal-kpi-label"><i class="bi bi-bar-chart-fill" style="color:#7c6af7;"></i> Por dia da semana</div>
-            <canvas id="chartDiaSemana" height="60"></canvas>
+    </div>
+
+    <!-- ── Gráfico largura total ── -->
+    <div class="cal-kpi-chart-row">
+        <div class="cal-kpi-card-chart">
+            <div class="cal-kpi-label"><i class="bi bi-bar-chart-fill" style="color:#7c6af7;"></i> Tarefas por dia da semana</div>
+            <div class="cal-chart-container">
+                <canvas id="chartDiaSemana"></canvas>
+            </div>
         </div>
     </div>
 
@@ -585,59 +670,68 @@
         <span class="cal-filter-badge" id="filtroBadge" style="display:none;"></span>
     </div>
 
-    <!-- ── CABEÇALHO ── -->
-    <div class="cal-header">
-        <div class="cal-header-left">
-            <button class="cal-nav-btn" id="btnPrev" title="Mês anterior">
-                <i class="bi bi-chevron-left"></i>
-            </button>
-            <div class="cal-title" id="calTitle"></div>
-            <button class="cal-nav-btn" id="btnNext" title="Próximo mês">
-                <i class="bi bi-chevron-right"></i>
-            </button>
-        </div>
-        <button class="cal-theme-toggle" id="btnTheme" title="Alternar tema claro/escuro">
-            <i class="bi bi-moon-stars" id="themeIcon"></i>
-        </button>
-    </div>
+    <!-- ── LAYOUT PRINCIPAL: calendário + lista lado a lado ── -->
+    <div class="cal-main-layout">
 
-    <!-- ── GRADE MENSAL (desktop) ── -->
-    <div class="cal-grid-wrapper">
-        <div class="cal-weekdays">
-            <div class="cal-weekday">Dom</div>
-            <div class="cal-weekday">Seg</div>
-            <div class="cal-weekday">Ter</div>
-            <div class="cal-weekday">Qua</div>
-            <div class="cal-weekday">Qui</div>
-            <div class="cal-weekday">Sex</div>
-            <div class="cal-weekday">Sáb</div>
-        </div>
-        <div class="cal-days" id="calDaysDesktop"></div>
-    </div>
+        <!-- COLUNA ESQUERDA: cabeçalho + grade -->
+        <div class="cal-col-calendar">
 
-    <!-- ── FAIXA SEMANAL (mobile) ── -->
-    <div class="cal-week-strip">
-        <div class="cal-weekdays">
-            <div class="cal-weekday">D</div>
-            <div class="cal-weekday">S</div>
-            <div class="cal-weekday">T</div>
-            <div class="cal-weekday">Q</div>
-            <div class="cal-weekday">Q</div>
-            <div class="cal-weekday">S</div>
-            <div class="cal-weekday">S</div>
-        </div>
-        <div class="cal-days" id="calDaysMobile"></div>
-    </div>
+            <div class="cal-header">
+                <div class="cal-header-left">
+                    <button class="cal-nav-btn" id="btnPrev" title="Mês anterior">
+                        <i class="bi bi-chevron-left"></i>
+                    </button>
+                    <div class="cal-title" id="calTitle"></div>
+                    <button class="cal-nav-btn" id="btnNext" title="Próximo mês">
+                        <i class="bi bi-chevron-right"></i>
+                    </button>
+                </div>
+                <button class="cal-theme-toggle" id="btnTheme" title="Alternar tema claro/escuro">
+                    <i class="bi bi-moon-stars" id="themeIcon"></i>
+                </button>
+            </div>
 
-    <!-- ── LISTA DE TAREFAS DO DIA ── -->
-    <div class="cal-list-section">
-        <div class="cal-list-title">
-            <i class="bi bi-calendar-event"></i>
-            <span id="listTitle">Tarefas do dia</span>
-            <span class="cal-list-date-badge" id="listDateBadge"></span>
-        </div>
-        <div id="taskList"></div>
-    </div>
+            <div class="cal-grid-wrapper">
+                <div class="cal-weekdays">
+                    <div class="cal-weekday">Dom</div>
+                    <div class="cal-weekday">Seg</div>
+                    <div class="cal-weekday">Ter</div>
+                    <div class="cal-weekday">Qua</div>
+                    <div class="cal-weekday">Qui</div>
+                    <div class="cal-weekday">Sex</div>
+                    <div class="cal-weekday">Sáb</div>
+                </div>
+                <div class="cal-days" id="calDaysDesktop"></div>
+            </div>
+
+            <div class="cal-week-strip">
+                <div class="cal-weekdays">
+                    <div class="cal-weekday">D</div>
+                    <div class="cal-weekday">S</div>
+                    <div class="cal-weekday">T</div>
+                    <div class="cal-weekday">Q</div>
+                    <div class="cal-weekday">Q</div>
+                    <div class="cal-weekday">S</div>
+                    <div class="cal-weekday">S</div>
+                </div>
+                <div class="cal-days" id="calDaysMobile"></div>
+            </div>
+
+        </div><!-- fim cal-col-calendar -->
+
+        <!-- COLUNA DIREITA: lista de tarefas do dia -->
+        <div class="cal-col-list">
+            <div class="cal-list-section">
+                <div class="cal-list-title">
+                    <i class="bi bi-calendar-event"></i>
+                    <span id="listTitle">Tarefas do dia</span>
+                    <span class="cal-list-date-badge" id="listDateBadge"></span>
+                </div>
+                <div id="taskList"></div>
+            </div>
+        </div><!-- fim cal-col-list -->
+
+    </div><!-- fim cal-main-layout -->
 
 </div>
 
@@ -774,8 +868,8 @@
                 }]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
+                responsive: false,
+                animation: false,
                 plugins: {
                     legend: { display: false },
                     tooltip: {
@@ -787,16 +881,26 @@
                 scales: {
                     x: {
                         grid: { color: gridColor },
-                        ticks: { color: textColor, font: { size: 10 } }
+                        ticks: { color: textColor, font: { size: 9 } }
                     },
                     y: {
                         grid: { color: gridColor },
-                        ticks: { color: textColor, font: { size: 10 }, stepSize: 1 },
+                        ticks: { color: textColor, font: { size: 9 }, stepSize: 1 },
                         beginAtZero: true
                     }
                 }
             }
         });
+
+        // Ajustar canvas ao container após criação
+        const container = document.querySelector('.cal-chart-container');
+        if (container && chartInstance) {
+            const w = container.clientWidth  || 600;
+            const h = container.clientHeight || 110;
+            chartInstance.canvas.width  = w;
+            chartInstance.canvas.height = h;
+            chartInstance.resize(w, h);
+        }
     }
 
     // ── UI dos filtros ───────────────────────────────────────────
@@ -1003,8 +1107,28 @@
                         <span class="badge ${priClass} cal-task-badge">${escHtml(t.prioridade)}</span>
                         <span class="badge bg-${catBs} ${catTextClass} cal-task-badge">${escHtml(t.categoria)}</span>
                         <span class="badge ${statusClass} cal-task-badge">${escHtml(t.status)}</span>
-                        ${t.comentario ? `<i class="bi bi-chat-left-text text-muted" title="${escHtml(t.comentario)}" data-bs-toggle="tooltip"></i>` : ''}
+                        ${t.comentario ? `<i class="bi bi-chat-left-text" style="color:var(--cal-muted);" title="${escHtml(t.comentario)}" data-bs-toggle="tooltip"></i>` : ''}
                     </div>
+                </div>
+                <div class="cal-task-actions">
+                    ${t.status !== 'Concluída' ? `
+                    <form method="POST" action="/marcar_concluida/${t.id}" style="display:inline;">
+                        <button type="submit" class="cal-task-btn btn-success" title="Marcar como concluída">
+                            <i class="bi bi-check-lg"></i>
+                        </button>
+                    </form>` : ''}
+                    <a href="/duplicar_tarefa/${t.id}" class="cal-task-btn btn-info" title="Duplicar">
+                        <i class="bi bi-files"></i>
+                    </a>
+                    <a href="/editar_tarefa/${t.id}" class="cal-task-btn" title="Editar">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                    <form method="POST" action="/deletar_tarefa/${t.id}" style="display:inline;"
+                          onsubmit="return confirm('Deletar \'${escHtml(t.tarefa).replace(/'/g,'\\\'')}\' ?');">
+                        <button type="submit" class="cal-task-btn btn-danger" title="Deletar">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </form>
                 </div>`;
 
             list.appendChild(card);

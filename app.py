@@ -734,8 +734,10 @@ def calendario():
 @login_required
 def entrada_rapida():
     """Página de entrada rápida de tarefa por texto livre"""
+    import json
     categorias = Categoria.query.filter_by(user_id=current_user.id).order_by(Categoria.nome).all()
-    return render_template('entrada_rapida.html', categorias=categorias)
+    categorias_json = json.dumps([{'nome': c.nome, 'cor': c.cor} for c in categorias], ensure_ascii=False)
+    return render_template('entrada_rapida.html', categorias_json=categorias_json)
 
 # ── Rota mover tarefas ──────────────────
 
