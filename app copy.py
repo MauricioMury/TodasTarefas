@@ -5,7 +5,7 @@ from flask_login import LoginManager, login_user, logout_user, login_required, c
 from werkzeug.security import generate_password_hash, check_password_hash
 from models import db, User, Tarefa, Categoria
 from datetime import datetime, date, time
-from notificacoes import enviar_email, enviar_whatsapp, montar_notificacao
+from notificacoes import enviar_email, montar_notificacao
 
 # ------------------------------------------------------------------
 # HELPER (adicionar junto às funções helper no topo do app.py)
@@ -107,71 +107,39 @@ def verificar_notificacoes():
     if not current_user.email_notif:
         return
 
-    agora = datetime.now()
+    agora = datetime.utcnow()
     MAX_POR_REQUEST = 5
-
-    tem_whatsapp = bool(current_user.whatsapp_numero and current_user.whatsapp_apikey)
 
     try:
         # ── Notificação 1 ────────────────────────────────────────
         pendentes_1 = Tarefa.query.filter(
-            Tarefa.user_id               == current_user.id,
-            Tarefa.notif_datetime_1      != None,
-            Tarefa.notif_datetime_1      <= agora,
-            db.or_(
-                Tarefa.notif_email_enviada_1     == False,
-                Tarefa.notif_whatsapp_enviada_1  == False,
-            )
+            Tarefa.user_id                == current_user.id,
+            Tarefa.notif_datetime_1       != None,
+            Tarefa.notif_datetime_1       <= agora,
+            Tarefa.notif_email_enviada_1  == False
         ).limit(MAX_POR_REQUEST).all()
 
         for tarefa in pendentes_1:
             assunto, corpo = montar_notificacao(tarefa)
-
-            if current_user.email_notif and not tarefa.notif_email_enviada_1:
-                sucesso_email = enviar_email(current_user.email_notif, assunto, corpo)
-                if sucesso_email:
-                    tarefa.notif_email_enviada_1 = True
-
-            if tem_whatsapp and not tarefa.notif_whatsapp_enviada_1:
-                sucesso_zap = enviar_whatsapp(
-                    current_user.whatsapp_numero,
-                    current_user.whatsapp_apikey,
-                    f'{assunto}\n\n{corpo}'
-                )
-                if sucesso_zap:
-                    tarefa.notif_whatsapp_enviada_1 = True
-
-            db.session.commit()
+            sucesso = enviar_email(current_user.email_notif, assunto, corpo)
+            if sucesso:
+                tarefa.notif_email_enviada_1 = True
+                db.session.commit()
 
         # ── Notificação 2 ────────────────────────────────────────
         pendentes_2 = Tarefa.query.filter(
-            Tarefa.user_id               == current_user.id,
-            Tarefa.notif_datetime_2      != None,
-            Tarefa.notif_datetime_2      <= agora,
-            db.or_(
-                Tarefa.notif_email_enviada_2     == False,
-                Tarefa.notif_whatsapp_enviada_2  == False,
-            )
+            Tarefa.user_id                == current_user.id,
+            Tarefa.notif_datetime_2       != None,
+            Tarefa.notif_datetime_2       <= agora,
+            Tarefa.notif_email_enviada_2  == False
         ).limit(MAX_POR_REQUEST).all()
 
         for tarefa in pendentes_2:
             assunto, corpo = montar_notificacao(tarefa)
-
-            if current_user.email_notif and not tarefa.notif_email_enviada_2:
-                sucesso_email = enviar_email(current_user.email_notif, assunto, corpo)
-                if sucesso_email:
-                    tarefa.notif_email_enviada_2 = True
-
-            if tem_whatsapp and not tarefa.notif_whatsapp_enviada_2:
-                sucesso_zap = enviar_whatsapp(
-                    current_user.whatsapp_numero,
-                    current_user.whatsapp_apikey,
-                    f'{assunto}\n\n{corpo}'
-                )
-                if sucesso_zap:
-                    tarefa.notif_whatsapp_enviada_2 = True
-
-            db.session.commit()
+            sucesso = enviar_email(current_user.email_notif, assunto, corpo)
+            if sucesso:
+                tarefa.notif_email_enviada_2 = True
+                db.session.commit()
 
     except Exception as e:
         app.logger.error(f'verificar_notificacoes: erro inesperado: {e}')
@@ -498,10 +466,8 @@ def cadastro_tarefa():
                 # 🆕
                 notif_datetime_1=notif_dt_1,
                 notif_email_enviada_1=False,
-                notif_whatsapp_enviada_1=False,
                 notif_datetime_2=notif_dt_2,
                 notif_email_enviada_2=False,
-                notif_whatsapp_enviada_2=False,
             )
             
             db.session.add(nova_tarefa)
@@ -653,15 +619,13 @@ def editar_tarefa(id):
             novo_dt_1 = parse_notif_datetime(request.form.get('notif_datetime_1'))
             novo_dt_2 = parse_notif_datetime(request.form.get('notif_datetime_2'))
 
-            # Se o datetime mudou, reseta flags de e-mail e WhatsApp (reativa a notificação)
+            # Se o datetime mudou, reseta a flag de enviada (reativa a notificação)
             if novo_dt_1 != tarefa.notif_datetime_1:
-                tarefa.notif_email_enviada_1    = False
-                tarefa.notif_whatsapp_enviada_1 = False
+                tarefa.notif_email_enviada_1 = False
             tarefa.notif_datetime_1 = novo_dt_1
 
             if novo_dt_2 != tarefa.notif_datetime_2:
-                tarefa.notif_email_enviada_2    = False
-                tarefa.notif_whatsapp_enviada_2 = False
+                tarefa.notif_email_enviada_2 = False
             tarefa.notif_datetime_2 = novo_dt_2
 
             db.session.commit()
