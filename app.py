@@ -77,7 +77,7 @@ def redirect_com_filtros(rota, **kwargs):
 # ==========================================
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'sua-chave-secreta-aqui-mude-em-producao'
+#app.config['SECRET_KEY'] = 'sua-chave-secreta-aqui-mude-em-producao'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///tarefas.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
