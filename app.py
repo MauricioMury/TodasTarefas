@@ -1,3 +1,4 @@
+import os
 from dotenv import load_dotenv
 load_dotenv()
 from flask import Flask, render_template, request, redirect, url_for, flash, session
@@ -78,6 +79,7 @@ def redirect_com_filtros(rota, **kwargs):
 
 app = Flask(__name__)
 #app.config['SECRET_KEY'] = 'sua-chave-secreta-aqui-mude-em-producao'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///tarefas.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
