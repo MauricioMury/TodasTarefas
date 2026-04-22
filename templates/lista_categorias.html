@@ -49,7 +49,7 @@
                                       action="{{ url_for('deletar_categoria', id=categoria.id) }}" 
                                       style="display: inline;"
                                       onsubmit="return confirm('Tem certeza que deseja deletar a categoria \'{{ categoria.nome }}\'?\n\nAtenção: Esta ação só será permitida se não houver tarefas usando esta categoria.');">
-                                    <button type="submit" class="btn btn-danger btn-sm" title="Deletar">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">                                    <button type="submit" class="btn btn-danger btn-sm" title="Deletar">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </form>

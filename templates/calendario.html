@@ -1194,7 +1194,10 @@
     function moverTarefa(tarefaId, origem, destino) {
         fetch(`/mover_tarefa/${tarefaId}`, {
             method:  'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token() }}'
+            },
             body:    JSON.stringify({ data_meta: destino })
         })
         .then(r => r.json())

@@ -11,6 +11,7 @@
             </div>
             <div class="card-body">
                 <form method="POST" action="{{ url_for('editar_tarefa', id=tarefa.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="mb-3">
                         <label for="tarefa" class="form-label">Tarefa *</label>
                         <input type="text" class="form-control" id="tarefa" name="tarefa"

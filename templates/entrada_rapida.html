@@ -57,6 +57,7 @@
 
                 <!-- Botão criar -->
                 <form method="POST" action="{{ url_for('cadastro_tarefa') }}" id="formRapido">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <input type="hidden" name="tarefa"      id="fTarefa">
                     <input type="hidden" name="data_meta"   id="fData">
                     <input type="hidden" name="hora_inicio" id="fHora">

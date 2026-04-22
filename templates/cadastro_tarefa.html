@@ -18,6 +18,7 @@
             </div>
             <div class="card-body">
                 <form method="POST" action="{{ url_for('cadastro_tarefa') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     {% if duplicate_id %}
                     <div class="alert alert-info">
                         <i class="bi bi-info-circle"></i> Você está duplicando uma tarefa. Preencha a nova data e hora fim.

@@ -210,6 +210,7 @@
                                 {% if tarefa.status == 'Pendente' %}
                                 <form method="POST" action="{{ url_for('marcar_concluida', id=tarefa.id) }}"
                                     style="display: inline;">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <button type="submit" class="btn btn-success btn-sm" title="Marcar como concluída">
                                         <i class="bi bi-check-circle"></i>
                                     </button>
@@ -226,7 +227,7 @@
                                 <form method="POST" action="{{ url_for('deletar_tarefa', id=tarefa.id) }}"
                                     style="display: inline;"
                                     onsubmit="return confirm('Tem certeza que deseja deletar esta tarefa?');">
-                                    <button type="submit" class="btn btn-danger btn-sm" title="Deletar">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">                                    <button type="submit" class="btn btn-danger btn-sm" title="Deletar">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </form>

@@ -21,6 +21,7 @@
                 <hr>
 
                 <form method="POST" action="{{ url_for('perfil') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                     <!-- ── Notificações por E-mail ── -->
                     <h6 class="mb-3">
