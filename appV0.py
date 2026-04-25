@@ -84,20 +84,8 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///tarefas.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# ── Segurança do cookie de sessão ──────────────────────────────
-app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-app.config['SESSION_COOKIE_SECURE']   = os.environ.get('SESSION_COOKIE_SECURE', 'False') == 'True'
-app.config['SESSION_COOKIE_HTTPONLY'] = True
-
 db.init_app(app)
 csrf = CSRFProtect(app)
-
-# ── Headers de segurança em todas as respostas ─────────────────
-@app.after_request
-def security_headers(response):
-    response.headers['X-Frame-Options']        = 'DENY'
-    response.headers['X-Content-Type-Options'] = 'nosniff'
-    return response
 
 login_manager = LoginManager()
 login_manager.init_app(app)
